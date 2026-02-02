@@ -17,7 +17,7 @@ def create_user():
         return jsonify({"error": "Utilisateur existe déjà"}), 400
     
     users[username] = genres
-    return jsonify({"message": "Utilisateur crée", "user":data})
+    return jsonify({"message": "Utilisateur créé", "user":data})
 
 
 @app.route("/users", methods=["GET"])
