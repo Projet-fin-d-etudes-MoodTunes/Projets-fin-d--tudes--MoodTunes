@@ -24,8 +24,23 @@ function SignIn() {
       return;
     }
 
-    // 👇 ICI EXACTEMENT
-    setUser({ username: data.username });
+    
+    setUser({
+      username: data.username,
+      genres: data.genres
+    });
+
+    localStorage.setItem(
+      "user",
+      JSON.stringify({
+        username: data.username,
+        genres: data.genres
+      })
+    );
+    localStorage.setItem(
+      "user",
+      JSON.stringify({ username: data.username })
+    );
     navigate("/home");
   };
 

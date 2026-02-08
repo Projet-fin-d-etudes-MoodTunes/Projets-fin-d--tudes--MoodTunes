@@ -56,7 +56,23 @@ function SignUp() {
     }
 
     // ✅ compte créé → utilisateur connecté
-    setUser({ username: data.username });
+    setUser({
+      username: data.username,
+      genres: data.genres
+    });
+
+    localStorage.setItem(
+      "user",
+      JSON.stringify({
+        username: data.username,
+        genres: data.genres
+      })
+    );
+
+    localStorage.setItem(
+      "user",
+      JSON.stringify({ username: data.username })
+    );
     navigate("/home");
   };
 

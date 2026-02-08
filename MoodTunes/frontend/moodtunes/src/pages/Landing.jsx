@@ -1,7 +1,17 @@
 import { useNavigate } from "react-router-dom";
+import { useContext, useEffect } from "react";
+import { AuthContext } from "../AuthContext";
 
 function Landing() {
   const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
+  
+
+  useEffect(() => {
+    if (user) {
+      navigate("/home");
+    }
+  }, [user, navigate]);
 
   return (
     <div>
