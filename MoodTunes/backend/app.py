@@ -1,6 +1,8 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
+import json
+from database import get_db
 
 app = Flask(__name__)
 CORS(app)  # Permet au front React de communiquer avec le backend
@@ -20,20 +22,27 @@ def signup():
     password = data.get("password")
     genres = data.get("genres", [])
 
-    # Vérifications simples
     if not username or not password:
         return jsonify({"error": "Champs manquants"}), 400
 
-    if username in users:
+    db = get_db()
+    cursor = db.cursor()
+
+    try:
+        cursor.execute(
+            "INSERT INTO users (username, password, genres) VALUES (?, ?, ?)",
+            (
+                username,
+                generate_password_hash(password),
+                json.dumps(genres)
+            )
+        )
+        db.commit()
+    except:
         return jsonify({"error": "Utilisateur existe déjà"}), 400
+    finally:
+        db.close()
 
-    # Création du compte
-    users[username] = {
-        "password": generate_password_hash(password),
-        "genres": genres
-    }
-
-    # Retourne l'utilisateur créé
     return jsonify({"username": username, "genres": genres}), 201
 
 
@@ -46,7 +55,12 @@ def login():
     username = data.get("username")
     password = data.get("password")
 
-    user = users.get(username)
+    db = get_db()
+    cursor = db.cursor()
+
+    cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
+    user = cursor.fetchone()
+    db.close()
 
     if not user:
         return jsonify({"error": "Utilisateur introuvable"}), 404
@@ -55,14 +69,14 @@ def login():
         return jsonify({"error": "Mot de passe incorrect"}), 401
 
     return jsonify({
-        "username": username,
-        "genres": user["genres"]
+        "username": user["username"],
+        "genres": json.loads(user["genres"])
     })
-
-
 # ===========================
 # Endpoint pour lister les utilisateurs (facultatif)
 # ===========================
+
+
 @app.route("/users", methods=["GET"])
 def get_users():
     return jsonify(users)
