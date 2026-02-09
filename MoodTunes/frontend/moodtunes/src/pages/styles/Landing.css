@@ -1,0 +1,42 @@
+.landing-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 40px;
+}
+
+.button-block {
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+  width: 300px;
+  transition: background-color 0.5s ease, color 0.5s ease;
+}
+
+
+.button-block h2,
+.button-block p {
+  margin: 5px 0;
+  transition: color 0.5s ease;
+}
+
+
+.button-block button {
+  margin-top: 10px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.active-bg {
+  background-color: #363742; 
+  color: #ffffff;             
+}
+
+.inactive-bg {
+  background-color: #ffffff; 
+  color: #000000;            
+}

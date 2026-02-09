@@ -55,7 +55,7 @@ function SignUp() {
       return;
     }
 
-    // ✅ compte créé → utilisateur connecté
+    //  compte créé → utilisateur connecté
     setUser({
       username: data.username,
       genres: data.genres
