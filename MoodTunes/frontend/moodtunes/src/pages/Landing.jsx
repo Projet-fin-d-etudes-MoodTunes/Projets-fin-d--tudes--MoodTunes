@@ -70,6 +70,9 @@ function Landing() {
       )}
 
       <div className={`landing-page ${introDone ? "landing-show" : "landing-hide"}`}>
+        <p className="landing-subtitle">
+          Découvrez des musiques adaptées à vos goûts et à votre humeur.
+        </p>
         <div
           className={`button-block ${
             activeBlock === "signin" ? "active-bg" : "inactive-bg"
@@ -80,7 +83,7 @@ function Landing() {
           <h2>{activeBlock === "signin" ? "Bon retour !" : "Connectez-vous !"}</h2>
           <p>
             {activeBlock === "signin"
-              ? "Prêt à écouter votre playlist ?"
+              ? "Replongez dans votre univers musical."
               : "Reprenez où vous avez quitté !"}
           </p>
 
