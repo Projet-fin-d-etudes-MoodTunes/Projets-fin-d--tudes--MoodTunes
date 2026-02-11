@@ -1,6 +1,8 @@
 .text-type {
   display: inline-block;
   white-space: pre-wrap;
+  width: 100%;
+  text-align: center;
 }
 
 .text-type__cursor {

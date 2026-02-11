@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import { AuthProvider } from "./AuthContext";
+import "./styles/global.css";
 
 // Création du root React
 const root = ReactDOM.createRoot(document.getElementById("root"));
