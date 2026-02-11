@@ -54,6 +54,7 @@ function SignUp() {
       }
 
       setUser({ username: data.username, genres: data.genres });
+
       localStorage.setItem(
         "user",
         JSON.stringify({ username: data.username, genres: data.genres })
@@ -122,7 +123,11 @@ function SignUp() {
 
           {error && <p className="auth-error">{error}</p>}
 
-          <button className="auth-button" onClick={handleSubmit} disabled={loading}>
+          <button
+            className="auth-button"
+            onClick={handleSubmit}
+            disabled={loading}
+          >
             {loading ? "Création..." : "Créer le compte"}
           </button>
         </div>

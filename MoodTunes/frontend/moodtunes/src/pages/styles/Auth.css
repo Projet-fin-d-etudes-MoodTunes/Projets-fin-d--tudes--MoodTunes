@@ -1,10 +1,26 @@
+/* =========================
+   PAGE WRAPPER + FADE IN
+   ========================= */
+
 .auth-page{
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 24px 16px;
+
+  /* Animation d'entrée */
+  animation: authFadeIn 400ms ease forwards;
 }
+
+@keyframes authFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* =========================
+   CARD
+   ========================= */
 
 .auth-card{
   width: 100%;
@@ -16,6 +32,10 @@
   box-shadow: 0 10px 28px rgba(0,0,0,0.18);
 }
 
+/* =========================
+   HEADER
+   ========================= */
+
 .auth-header h1{
   margin: 0;
   font-size: 1.8rem;
@@ -26,6 +46,10 @@
   margin-bottom: 16px;
   opacity: 0.75;
 }
+
+/* =========================
+   FORM
+   ========================= */
 
 .auth-form{
   display: flex;
@@ -55,12 +79,20 @@
   border-color: rgba(0,0,0,0.35);
 }
 
+/* =========================
+   ERROR
+   ========================= */
+
 .auth-error{
   margin: 4px 0 0 0;
   color: #b00020;
   font-weight: 600;
   font-size: 0.95rem;
 }
+
+/* =========================
+   BUTTON
+   ========================= */
 
 .auth-button{
   margin-top: 6px;
@@ -71,7 +103,11 @@
   color: #fff;
   font-weight: 700;
   cursor: pointer;
-  transition: transform 0.15s ease, opacity 0.2s ease;
+  transition: transform 0.15s ease, opacity 0.2s ease, background 0.2s ease;
+}
+
+.auth-button:hover{
+  background: #2d2e37;
 }
 
 .auth-button:active{
@@ -82,6 +118,10 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* =========================
+   FOOTER
+   ========================= */
 
 .auth-footer{
   margin-top: 14px;
@@ -106,6 +146,9 @@
   opacity: 0.5;
 }
 
+/* =========================
+   GENRES (SignUp)
+   ========================= */
 
 .auth-genres {
   margin-top: 4px;
@@ -138,4 +181,3 @@
   width: 16px;
   height: 16px;
 }
-

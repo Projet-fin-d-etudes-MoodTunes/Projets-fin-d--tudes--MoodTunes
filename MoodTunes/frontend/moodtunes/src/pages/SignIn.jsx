@@ -41,7 +41,7 @@ function SignIn() {
       );
 
       navigate("/home");
-    } catch (e) {
+    } catch {
       setError("Impossible de se connecter. Vérifie le serveur.");
     } finally {
       setLoading(false);
@@ -64,7 +64,6 @@ function SignIn() {
               placeholder="MoodTunesEnjoyer"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              autoComplete="username"
             />
           </label>
 
@@ -76,7 +75,6 @@ function SignIn() {
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              autoComplete="current-password"
             />
           </label>
 
@@ -92,15 +90,9 @@ function SignIn() {
         </div>
 
         <div className="auth-footer">
-          <Link className="auth-link" to="/">
-            ← Retour à l’accueil
-          </Link>
-
+          <Link className="auth-link" to="/">← Accueil</Link>
           <span className="auth-sep">•</span>
-
-          <Link className="auth-link" to="/signup">
-            Créer un compte
-          </Link>
+          <Link className="auth-link" to="/signup">Créer un compte</Link>
         </div>
       </div>
     </div>
