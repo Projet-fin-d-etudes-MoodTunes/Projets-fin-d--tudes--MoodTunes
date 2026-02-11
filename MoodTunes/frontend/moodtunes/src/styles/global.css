@@ -32,13 +32,11 @@ body {
 
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Raleway:ital,wght@0,100..900;1,100..900&display=swap');
 
-.intro-overlay{
+.intro-overlay, h1, h2{
     font-family: 'Titles', Arial, sans-serif ;
 }
 
-h2{
-    font-family: 'Titles', Arial, sans-serif;
-}
+
 
 p, button{
     font-family: 'Montserrat';

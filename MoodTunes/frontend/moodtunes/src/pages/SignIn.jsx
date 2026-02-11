@@ -1,69 +1,108 @@
 import { useState, useContext } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { AuthContext } from "../AuthContext";
+import "./styles/Auth.css";
 
 function SignIn() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const { setUser } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const handleLogin = async () => {
-    const response = await fetch("http://localhost:5000/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
-    });
+    setError("");
+    setLoading(true);
 
-    const data = await response.json();
+    try {
+      const response = await fetch("http://localhost:5000/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
 
-    if (!response.ok) {
-      setError(data.error);
-      return;
-    }
+      const data = await response.json();
 
-    
-    setUser({
-      username: data.username,
-      genres: data.genres
-    });
+      if (!response.ok) {
+        setError(data?.error || "Erreur de connexion");
+        return;
+      }
 
-    localStorage.setItem(
-      "user",
-      JSON.stringify({
+      setUser({
         username: data.username,
-        genres: data.genres
-      })
-    );
-    localStorage.setItem(
-      "user",
-      JSON.stringify({ username: data.username })
-    );
-    navigate("/home");
+        genres: data.genres,
+      });
+
+      localStorage.setItem(
+        "user",
+        JSON.stringify({ username: data.username, genres: data.genres })
+      );
+
+      navigate("/home");
+    } catch (e) {
+      setError("Impossible de se connecter. Vérifie le serveur.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div>
-      <h1>Connexion</h1>
+    <div className="auth-page">
+      <div className="auth-card">
+        <div className="auth-header">
+          <h1>Connexion</h1>
+          <p>Reprenez votre univers musical.</p>
+        </div>
 
-      <input
-        placeholder="Nom d'utilisateur"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-      />
+        <div className="auth-form">
+          <label className="auth-label">
+            Nom d’utilisateur
+            <input
+              className="auth-input"
+              placeholder="MoodTunesEnjoyer"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              autoComplete="username"
+            />
+          </label>
 
-      <input
-        type="password"
-        placeholder="Mot de passe"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
+          <label className="auth-label">
+            Mot de passe
+            <input
+              className="auth-input"
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
+            />
+          </label>
 
-      <button onClick={handleLogin}>Se connecter</button>
+          {error && <p className="auth-error">{error}</p>}
 
-      {error && <p>{error}</p>}
+          <button
+            className="auth-button"
+            onClick={handleLogin}
+            disabled={loading}
+          >
+            {loading ? "Connexion..." : "Se connecter"}
+          </button>
+        </div>
+
+        <div className="auth-footer">
+          <Link className="auth-link" to="/">
+            ← Retour à l’accueil
+          </Link>
+
+          <span className="auth-sep">•</span>
+
+          <Link className="auth-link" to="/signup">
+            Créer un compte
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }
