@@ -2,7 +2,7 @@
 import { useNavigate } from "react-router-dom";
 import { useContext, useEffect, useRef, useState } from "react";
 import { AuthContext } from "../AuthContext";
-import TextType from "./scripts/TextType";
+import TextType from "../components/TextType";
 import { gsap } from "gsap";
 import "./styles/Landing.css";
 
