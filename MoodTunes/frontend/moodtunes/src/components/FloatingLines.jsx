@@ -364,17 +364,18 @@ export default function FloatingLines({
     const clock = new Clock();
 
     const setSize = () => {
-      const el = containerRef.current;
-      const width = el.clientWidth || 1;
-      const height = el.clientHeight || 1;
+    const el = containerRef.current;
+    if (!el) return; // ✅ évite clientWidth sur null
 
-      renderer.setSize(width, height, false);
+    const width = el.clientWidth || 1;
+    const height = el.clientHeight || 1;
 
-      const canvasWidth = renderer.domElement.width;
-      const canvasHeight = renderer.domElement.height;
-      uniforms.iResolution.value.set(canvasWidth, canvasHeight, 1);
-    };
+    renderer.setSize(width, height, false);
 
+    const canvasWidth = renderer.domElement.width;
+    const canvasHeight = renderer.domElement.height;
+    uniforms.iResolution.value.set(canvasWidth, canvasHeight, 1);
+  };
     setSize();
 
     const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(setSize) : null;

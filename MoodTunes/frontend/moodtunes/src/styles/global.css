@@ -38,3 +38,8 @@ p, button{
 }
 
 
+body{
+  background: radial-gradient(1200px 600px at 50% 20%, rgba(167,139,250,0.25), transparent 60%),
+              radial-gradient(900px 500px at 30% 60%, rgba(125,211,252,0.18), transparent 55%),
+              #0b0b10;
+}
