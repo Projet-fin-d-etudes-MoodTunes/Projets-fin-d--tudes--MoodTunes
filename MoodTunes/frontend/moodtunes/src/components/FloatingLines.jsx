@@ -27,6 +27,9 @@ precision highp float;
 uniform float iTime;
 uniform vec3  iResolution;
 uniform float animationSpeed;
+uniform float waveAmp;
+uniform float waveFreq;
+uniform float waveThickness;
 
 uniform bool enableTop;
 uniform bool enableMiddle;
@@ -106,8 +109,8 @@ vec3 getLineColor(float t, vec3 baseColor) {
 
   float x_offset   = offset;
   float x_movement = time * 0.1;
-  float amp        = sin(offset + time * 0.2) * 0.3;
-  float y          = sin(uv.x + x_offset + x_movement) * amp;
+  float amp        = sin(offset + time * 0.2) * waveAmp;
+  float y          = sin(uv.x * waveFreq + x_offset + x_movement) * amp;
 
   if (shouldBend) {
     vec2 d = screenUv - mouseUv;
@@ -117,7 +120,8 @@ vec3 getLineColor(float t, vec3 baseColor) {
   }
 
   float m = uv.y - y;
-  return 0.0175 / max(abs(m) + 0.01, 1e-3) + 0.01;
+  return waveThickness / max(abs(m) + 0.01, 1e-3) + 0.01;
+
 }
 
 void mainImage(out vec4 fragColor, in vec2 fragCoord) {
@@ -244,7 +248,10 @@ export default function FloatingLines({
   mouseDamping = 0.05,
   parallax = true,
   parallaxStrength = 0.2,
-  mixBlendMode = 'screen'
+  mixBlendMode = 'screen',
+  waveAmp = 0.3,
+  waveFreq = 1.0,
+  waveThickness = 0.0175
 }) {
   const containerRef = useRef(null);
   const targetMouseRef = useRef(new Vector2(-1000, -1000));
@@ -289,12 +296,16 @@ export default function FloatingLines({
     renderer.domElement.style.width = '100%';
     renderer.domElement.style.height = '100%';
     containerRef.current.appendChild(renderer.domElement);
-
+    
     const uniforms = {
       iTime: { value: 0 },
       iResolution: { value: new Vector3(1, 1, 1) },
       animationSpeed: { value: animationSpeed },
 
+      waveAmp: { value: 0.3 },
+      waveFreq: { value: 1.0 },
+      waveThickness: { value: 0.0175 },
+      
       enableTop: { value: enabledWaves.includes('top') },
       enableMiddle: { value: enabledWaves.includes('middle') },
       enableBottom: { value: enabledWaves.includes('bottom') },
@@ -357,6 +368,9 @@ export default function FloatingLines({
       fragmentShader
     });
 
+    uniforms.waveAmp.value = waveAmp;
+    uniforms.waveFreq.value = waveFreq;
+    uniforms.waveThickness.value = waveThickness;
     const geometry = new PlaneGeometry(2, 2);
     const mesh = new Mesh(geometry, material);
     scene.add(mesh);
@@ -467,7 +481,11 @@ export default function FloatingLines({
     bendStrength,
     mouseDamping,
     parallax,
-    parallaxStrength
+    parallaxStrength,
+    waveAmp,
+    waveFreq,
+    waveThickness
+
   ]);
 
   return (

@@ -34,6 +34,59 @@
 /* contenu */
 .home-content{
   position: relative;
-  z-index: 1; /* au-dessus du bg */
+  z-index: 1;
+  padding: 18px 16px;
   color: #fff;
+  text-align: center;
 }
+
+.emotion-grid{
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.emotion-card{
+  width: 100%;
+  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(0,0,0,0.18);
+  backdrop-filter: blur(10px);
+  border-radius: 14px;
+  padding: 14px 12px;
+  color: #fff;
+  cursor: pointer;
+  text-align: left;
+  transition: transform 150ms ease, background 200ms ease, border-color 200ms ease;
+}
+
+.emotion-card:active{
+  transform: scale(0.98);
+}
+
+.emotion-card.is-active{
+  border-color: rgba(255,255,255,0.55);
+  background: rgba(255,255,255,0.10);
+}
+
+.emotion-title{
+  font-weight: 900;
+  font-size: 1.05rem;
+}
+
+.emotion-meta{
+  margin-top: 6px;
+  display: flex;
+  gap: 8px;
+  opacity: 0.9;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.emotion-sense{
+  margin-top: 6px;
+  opacity: 0.85;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
