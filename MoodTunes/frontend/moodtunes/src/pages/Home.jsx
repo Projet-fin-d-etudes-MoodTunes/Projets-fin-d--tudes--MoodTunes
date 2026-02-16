@@ -1,5 +1,5 @@
 // src/pages/Home.jsx
-import { useContext, useMemo, useState, useEffect } from "react";
+import { useContext, useMemo, useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../AuthContext";
 import AppShell from "../components/AppShell";
@@ -14,30 +14,34 @@ const EMOTION_TRACKS = {
   heureux: {
     title: "MoodTunes — Heureux",
     artist: "À définir",
-    embedUrl: "https://open.spotify.com/embed/track/PLACEHOLDER_HEUREUX",
+    embedUrl:
+      "https://open.spotify.com/embed/track/60nZcImufyMA1MKQY3dcCH?utm_source=generator",
   },
   calme: {
     title: "MoodTunes — Calme",
     artist: "À définir",
-    embedUrl: "https://open.spotify.com/embed/track/PLACEHOLDER_CALME",
+    embedUrl:
+      "https://open.spotify.com/embed/track/0oufSLnKQDoBFX5mgkDCgR?utm_source=generator",
   },
   amour: {
     title: "MoodTunes — Amour",
     artist: "À définir",
-    embedUrl: "https://open.spotify.com/embed/track/3DZQ6mzUkAdHqZWzqxBKIK?utm_source=generator",
+    embedUrl:
+      "https://open.spotify.com/embed/track/3DZQ6mzUkAdHqZWzqxBKIK?utm_source=generator",
   },
   triste: {
     title: "MoodTunes — Triste",
     artist: "À définir",
-    embedUrl: "https://open.spotify.com/embed/track/PLACEHOLDER_TRISTE",
+    embedUrl:
+      "https://open.spotify.com/embed/track/047fCsbO4NdmwCBn8pcUXl?utm_source=generator",
   },
   energique: {
     title: "MoodTunes — Énergique",
     artist: "À définir",
-    embedUrl: "https://open.spotify.com/embed/track/PLACEHOLDER_ENERGIQUE",
+    embedUrl:
+      "https://open.spotify.com/embed/track/1BIXs6CdkPRLytuqoXs6XN?utm_source=generator",
   },
 };
-
 
 const EMOTIONS = [
   {
@@ -150,6 +154,10 @@ export default function Home() {
   const [emotionId, setEmotionId] = useState("base");
   const [feedback, setFeedback] = useState({});
 
+  // ✅ animations
+  const [mounted, setMounted] = useState(false);
+  const [transitioning, setTransitioning] = useState(false);
+
   const active = useMemo(
     () => EMOTIONS.find((e) => e.id === emotionId) || EMOTIONS[0],
     [emotionId]
@@ -157,6 +165,11 @@ export default function Home() {
 
   const activeTrack = EMOTION_TRACKS[emotionId] || null;
 
+  // Entrée page (fade-in)
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
 
   // Charger feedback au mount + quand user change
   useEffect(() => {
@@ -171,12 +184,26 @@ export default function Home() {
     setUser((prev) => (prev ? { ...prev, feedback: next } : prev));
   };
 
+  // Transition screen (fade-out -> switch -> fade-in)
+  const goToScreen = useCallback((nextScreen) => {
+    setTransitioning(true);
+    window.setTimeout(() => {
+      setScreen(nextScreen);
+      setTransitioning(false);
+    }, 220); // doit matcher Home.css
+  }, []);
+
   const handleChooseEmotion = (id) => {
     setEmotionId(id);
-    setScreen("player");
+    goToScreen("player");
   };
 
   const handleVote = (liked) => {
+    if (!activeTrack) {
+      goToScreen("choose");
+      return;
+    }
+
     const entry = {
       liked,
       embedUrl: activeTrack.embedUrl,
@@ -189,11 +216,12 @@ export default function Home() {
     setFeedback(next);
     persistFeedback(next);
 
-    // Après avis, retour automatique au choix
-    setScreen("choose");
-
-    // remettre le thème base après avis 
-    // setEmotionId("base");
+    // Après avis, retour automatique au choix (avec animation)
+    window.setTimeout(() => {
+      goToScreen("choose");
+      // remettre le thème base après avis (si tu veux)
+      // setEmotionId("base");
+    }, 300);
   };
 
   const handleLogout = () => {
@@ -230,7 +258,14 @@ export default function Home() {
           />
         </div>
 
-        <div className="home-content">
+        {/* ✅ animation container */}
+        <div
+          className={[
+            "home-content",
+            mounted ? "is-mounted" : "",
+            transitioning ? "is-transitioning" : "",
+          ].join(" ")}
+        >
           {screen === "choose" ? (
             <>
               <h1>Bienvenue {user?.username} 🎧</h1>
@@ -262,7 +297,9 @@ export default function Home() {
                 <div className="player-title">
                   <div className="player-emotion">{active.label}</div>
                   <div className="player-sub">
-                    Je vous recommende {activeTrack.title} • de {activeTrack.artist}
+                    Je vous recommande{" "}
+                    {activeTrack?.title || "une musique"} • de{" "}
+                    {activeTrack?.artist || "..." }
                   </div>
                 </div>
               </div>
@@ -270,7 +307,7 @@ export default function Home() {
               <div className="spotify-card">
                 <iframe
                   title={`Spotify-${emotionId}`}
-                  src={activeTrack.embedUrl}
+                  src={activeTrack?.embedUrl}
                   width="100%"
                   height="152"
                   frameBorder="0"
