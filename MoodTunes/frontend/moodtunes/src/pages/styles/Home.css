@@ -199,7 +199,7 @@
 
 /* optionnel: hover/press (mobile friendly) */
 .emotion-card{
-  transition: transform 160ms ease, filter 160ms ease;
+  transition: transform 260ms ease, filter 260ms ease;
 }
 .emotion-card:active{
   transform: scale(0.98);
