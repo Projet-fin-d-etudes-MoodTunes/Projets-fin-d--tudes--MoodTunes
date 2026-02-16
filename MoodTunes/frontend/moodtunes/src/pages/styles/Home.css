@@ -90,3 +90,73 @@
   font-size: 0.85rem;
 }
 
+
+* ---- Player view ---- */
+.player-top{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.back-btn{
+  border: 0;
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: rgba(54,55,66,0.92);
+  color: #fff;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.player-title{
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.player-emotion{
+  font-weight: 900;
+  font-size: 1.1rem;
+}
+
+.player-sub{
+  opacity: 0.85;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.spotify-card{
+  margin-top: 14px;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 10px 28px rgba(0,0,0,0.18);
+  background: rgba(243,243,243,0.92);
+}
+
+.vote-row{
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.vote-btn{
+  border: 0;
+  border-radius: 14px;
+  padding: 12px 12px;
+  font-weight: 900;
+  cursor: pointer;
+  background: rgba(243,243,243,0.92);
+  box-shadow: 0 10px 28px rgba(0,0,0,0.14);
+}
+
+.vote-btn.like.is-active{
+  background: rgba(25, 201, 25, 0.85);
+  color: #0b1020;
+}
+
+.vote-btn.dislike.is-active{
+  background: rgba(195, 7, 10, 0.85);
+  color: #fff;
+}
+
