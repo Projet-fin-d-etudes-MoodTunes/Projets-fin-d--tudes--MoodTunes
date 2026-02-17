@@ -69,12 +69,12 @@ def login():
         return jsonify({"error": "Mot de passe incorrect"}), 401
 
     return jsonify({
+        "id": user["id"],
         "username": user["username"],
         "genres": json.loads(user["genres"])
     })
-# ===========================
-# Endpoint pour lister les utilisateurs (facultatif)
-# ===========================
+
+# Endpoint pour lister les utilisateurs
 
 
 @app.route("/users", methods=["GET"])

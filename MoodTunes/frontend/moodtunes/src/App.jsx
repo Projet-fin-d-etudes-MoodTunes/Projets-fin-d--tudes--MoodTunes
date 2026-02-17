@@ -6,7 +6,6 @@ import Home from "./pages/Home";
 import About from "./pages/About";
 import Saved from "./pages/Saved";
 import Preferences from "./pages/Preferences";
-import Contact from "./pages/Contact";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 export default function App() {
@@ -29,7 +28,6 @@ export default function App() {
       <Route path="/about" element={<About />} />
       <Route path="/saved" element={<Saved />} />
       <Route path="/preferences" element={<Preferences />} />
-      <Route path="/contact" element={<Contact />} />
     </Routes>
   );
 }

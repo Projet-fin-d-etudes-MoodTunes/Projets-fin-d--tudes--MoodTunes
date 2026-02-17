@@ -9,7 +9,7 @@
   inset: 0;
   width: 100vw;
   height: 100vh;
-  z-index: -1;           /* pas -1 */
+  z-index: -1;         
 }
 
 .floating-bg,
@@ -17,7 +17,7 @@
   pointer-events: none !important;
 }
 
-/* le canvas interne doit remplir */
+
 .floating-lines-container{
   width: 100%;
   height: 100%;
@@ -98,15 +98,6 @@
   gap: 12px;
 }
 
-.back-btn{
-  border: 0;
-  border-radius: 12px;
-  padding: 10px 12px;
-  background: rgba(54,55,66,0.92);
-  color: #fff;
-  font-weight: 800;
-  cursor: pointer;
-}
 
 .player-title{
   display: flex;
@@ -184,12 +175,12 @@
   transform: translateY(14px);
 }
 
-/* micro anim des éléments */
+
 .emotion-grid,
 .player-top,
 .spotify-card,
 .vote-row{
-  animation: softIn 260ms ease both;
+  animation: softIn 300ms ease both;
 }
 
 @keyframes softIn{
@@ -197,9 +188,9 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* optionnel: hover/press (mobile friendly) */
+
 .emotion-card{
-  transition: transform 260ms ease, filter 260ms ease;
+  transition: transform 300ms ease, filter 300ms ease;
 }
 .emotion-card:active{
   transform: scale(0.98);

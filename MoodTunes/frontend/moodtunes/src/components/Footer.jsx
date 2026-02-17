@@ -15,8 +15,8 @@ export default function Footer() {
         À propos
       </a>
 
-      <a href="/contact" className="footer-link" onClick={(e) => go(e, "/contact")}>
-        Contact
+      <a href="/saved" className="footer-link" onClick={(e) => go(e, "/saved")}>
+        Musiques sauvegardées
       </a>
 
       <a href="/preferences" className="footer-link" onClick={(e) => go(e, "/preferences")}>

@@ -154,7 +154,7 @@ export default function Home() {
   const [emotionId, setEmotionId] = useState("base");
   const [feedback, setFeedback] = useState({});
 
-  // ✅ animations
+  // animations
   const [mounted, setMounted] = useState(false);
   const [transitioning, setTransitioning] = useState(false);
 
@@ -165,7 +165,7 @@ export default function Home() {
 
   const activeTrack = EMOTION_TRACKS[emotionId] || null;
 
-  // Entrée page (fade-in)
+  // 
   useEffect(() => {
     const id = requestAnimationFrame(() => setMounted(true));
     return () => cancelAnimationFrame(id);
@@ -190,7 +190,7 @@ export default function Home() {
     window.setTimeout(() => {
       setScreen(nextScreen);
       setTransitioning(false);
-    }, 220); // doit matcher Home.css
+    }, 220); 
   }, []);
 
   const handleChooseEmotion = (id) => {
@@ -219,7 +219,7 @@ export default function Home() {
     // Après avis, retour automatique au choix (avec animation)
     window.setTimeout(() => {
       goToScreen("choose");
-      // remettre le thème base après avis (si tu veux)
+      // remettre le thème base après avis 
       // setEmotionId("base");
     }, 300);
   };

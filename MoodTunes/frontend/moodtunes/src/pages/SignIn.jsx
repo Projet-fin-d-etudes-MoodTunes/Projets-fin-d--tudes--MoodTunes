@@ -31,13 +31,17 @@ function SignIn() {
       }
 
       setUser({
+        id: data.id,
         username: data.username,
         genres: data.genres,
       });
 
       localStorage.setItem(
         "user",
-        JSON.stringify({ username: data.username, genres: data.genres })
+        JSON.stringify({ id: data.id, 
+                          username: data.username, 
+                          genres: data.genres 
+                        })
       );
 
       navigate("/home");
