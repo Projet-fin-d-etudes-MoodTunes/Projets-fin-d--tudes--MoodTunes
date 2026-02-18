@@ -3,12 +3,19 @@ import { useNavigate, Link } from "react-router-dom";
 import { AuthContext } from "../AuthContext";
 import "./styles/Auth.css";
 
-const GENRES = {
-  Pop: ["Pop", "Indie Pop", "Electro Pop"],
-  Rock: ["Rock", "Alternative Rock", "Metal"],
-  Urban: ["Hip-Hop", "Rap", "R&B", "Funk"],
-  Chill: ["Jazz", "Lo-fi", "Ambient"],
-};
+/**
+ * Genres principaux seulement.
+ * Les sous-genres sont informatifs.
+ * On stocke uniquement le `id`.
+ */
+const GENRES = [
+  { id: "pop", label: "Pop", includes: ["Indie Pop", "Electro Pop"] },
+  { id: "rock", label: "Rock", includes: ["Alternative Rock", "Metal"] },
+  { id: "rap", label: "Rap", includes: ["Hip-Hop", "Trap"] },
+  { id: "rnb", label: "R&B / Soul", includes: ["Neo Soul", "Soul"] },
+  { id: "electronic", label: "Electronic", includes: ["House", "EDM"] },
+  { id: "chill", label: "Chill", includes: ["Lo-fi", "Ambient", "Jazz"] },
+];
 
 function SignUp() {
   const [username, setUsername] = useState("");
@@ -20,9 +27,11 @@ function SignUp() {
   const { setUser } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  const handleGenreChange = (genre) => {
+  const handleGenreChange = (genreId) => {
     setSelectedGenres((prev) =>
-      prev.includes(genre) ? prev.filter((g) => g !== genre) : [...prev, genre]
+      prev.includes(genreId)
+        ? prev.filter((g) => g !== genreId)
+        : [...prev, genreId]
     );
   };
 
@@ -33,17 +42,23 @@ function SignUp() {
       setError("Veuillez remplir tous les champs");
       return;
     }
+
     if (selectedGenres.length === 0) {
       setError("Veuillez sélectionner au moins un genre");
       return;
     }
 
     setLoading(true);
+
     try {
       const response = await fetch("http://localhost:5000/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password, genres: selectedGenres }),
+        body: JSON.stringify({
+          username,
+          password,
+          genres: selectedGenres,
+        }),
       });
 
       const data = await response.json();
@@ -53,11 +68,17 @@ function SignUp() {
         return;
       }
 
-      setUser({ username: data.username, genres: data.genres });
+      setUser({
+        username: data.username,
+        genres: data.genres,
+      });
 
       localStorage.setItem(
         "user",
-        JSON.stringify({ username: data.username, genres: data.genres })
+        JSON.stringify({
+          username: data.username,
+          genres: data.genres,
+        })
       );
 
       navigate("/home");
@@ -73,7 +94,10 @@ function SignUp() {
       <div className="auth-card">
         <div className="auth-header">
           <h1>Créer un compte</h1>
-          <p>Choisis tes goûts musicaux pour des recommandations plus précises.</p>
+          <p>
+            Sélectionne tes genres favoris.  
+            Les sous-genres sont inclus automatiquement.
+          </p>
         </div>
 
         <div className="auth-form">
@@ -101,22 +125,22 @@ function SignUp() {
           </label>
 
           <div className="auth-genres">
-            <div className="auth-genres-title">Goûts musicaux</div>
+            <div className="auth-genres-title">Genres favoris</div>
 
-            {Object.entries(GENRES).map(([category, genres]) => (
-              <div key={category} className="auth-genre-group">
-                <div className="auth-genre-category">{category}</div>
+            {GENRES.map((genre) => (
+              <div key={genre.id} className="auth-genre-group">
+                <label className="auth-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={selectedGenres.includes(genre.id)}
+                    onChange={() => handleGenreChange(genre.id)}
+                  />
+                  <span>{genre.label}</span>
+                </label>
 
-                {genres.map((genre) => (
-                  <label key={genre} className="auth-checkbox">
-                    <input
-                      type="checkbox"
-                      checked={selectedGenres.includes(genre)}
-                      onChange={() => handleGenreChange(genre)}
-                    />
-                    <span>{genre}</span>
-                  </label>
-                ))}
+                <div className="auth-subgenres">
+                  Inclus : {genre.includes.join(", ")}
+                </div>
               </div>
             ))}
           </div>

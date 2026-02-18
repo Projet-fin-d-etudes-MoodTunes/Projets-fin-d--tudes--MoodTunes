@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS tracks (
     artist TEXT NOT NULL,
     embed_url TEXT NOT NULL,
     emotion TEXT NOT NULL,
+    genre TEXT NOT NULL,          
     playlist_id TEXT NOT NULL
 )
 """)
