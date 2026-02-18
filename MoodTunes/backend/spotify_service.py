@@ -2,11 +2,13 @@ import os
 from dotenv import load_dotenv
 import requests
 import base64
+import time
 
 load_dotenv()
 
 CLIENT_ID = os.getenv("SPOTIFY_CLIENT_ID")
 CLIENT_SECRET = os.getenv("SPOTIFY_CLIENT_SECRET")
+ACCESS_TOKEN = os.getenv("SPOTIFY_TOKEN")
 
 
 def get_access_token():
@@ -30,21 +32,34 @@ def get_access_token():
     return json_result["access_token"]
 
 
-def fetch_playlist_tracks(playlist_id, access_token):
-    url = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks?limit=100"
+def fetch_playlist_tracks(playlist_id):
+    url = f"https://api.spotify.com/v1/playlists/{playlist_id}/items?limit=100"
 
     headers = {
-        "Authorization": f"Bearer {access_token}"
+        "Authorization": f"Bearer {ACCESS_TOKEN}"
     }
 
     tracks = []
     while url:
         result = requests.get(url, headers=headers)
+        print("Status:", result.status_code)
+
+        if result.status_code == 429:
+            retry_after = int(result.headers.get("Retry-After", 5))
+            print(f"⏳ Rate limit atteint. Attente {retry_after} secondes...")
+            time.sleep(retry_after)
+            continue
+
+        if result.status_code != 200:
+            print("❌ Erreur:", result.status_code, result.text)
+            break
+
         data = result.json()
 
-        for item in data["items"]:
+        for item in data.get("items", []):
             track = item.get("track")
-            if track:
+
+            if track and track.get("id"):
                 tracks.append({
                     "spotify_id": track["id"],
                     "name": track["name"],
