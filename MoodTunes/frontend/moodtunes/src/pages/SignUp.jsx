@@ -9,11 +9,11 @@ import "./styles/Auth.css";
  * On stocke uniquement le `id`.
  */
 const GENRES = [
-  { id: "pop", label: "Pop", includes: ["Indie Pop", "Electro Pop"] },
+  { id: "pop", label: "Pop", includes: ["Indie Pop", "Dance Pop"] },
   { id: "rock", label: "Rock", includes: ["Alternative Rock", "Metal"] },
   { id: "rap", label: "Rap", includes: ["Hip-Hop", "Trap"] },
   { id: "rnb", label: "R&B / Soul", includes: ["Neo Soul", "Soul"] },
-  { id: "electronic", label: "Electronic", includes: ["House", "EDM"] },
+  { id: "electronique", label: "Electronique", includes: ["House", "EDM"] },
   { id: "chill", label: "Chill", includes: ["Lo-fi", "Ambient", "Jazz"] },
 ];
 
