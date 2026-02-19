@@ -313,12 +313,12 @@ export default function Home() {
             <>
               <div className="player-top">
                 <div className="player-title">
-                  <div className="player-emotion">{active.label}</div>
-                  <div className="player-sub">
+                  <h1 className="player-emotion">{active.label}</h1>
+                  <p className="player-sub">
                     Je vous recommande{" "}
                     {activeTrack?.title || "une musique"} • de{" "}
                     {activeTrack?.artist || "..." }
-                  </div>
+                  </p>
                 </div>
               </div>
 

@@ -8,7 +8,7 @@
   position: fixed;
   inset: 0;
   width: 100vw;
-  height: 100vh;
+  min-height: 100vh;
   z-index: -0;         
 }
 
@@ -79,7 +79,6 @@
 
 .emotion-title{
   font-weight: 900;
-  font-size: 1.05rem;
 }
 
 .emotion-meta{
@@ -88,14 +87,12 @@
   gap: 8px;
   opacity: 0.9;
   font-weight: 700;
-  font-size: 0.85rem;
 }
 
 .emotion-sense{
   margin-top: 6px;
   opacity: 0.85;
   font-weight: 700;
-  font-size: 0.85rem;
 }
 
 
@@ -115,13 +112,11 @@
 
 .player-emotion{
   font-weight: 900;
-  font-size: 1.1rem;
 }
 
 .player-sub{
   opacity: 0.85;
   font-weight: 700;
-  font-size: 0.95rem;
 }
 
 .spotify-card{

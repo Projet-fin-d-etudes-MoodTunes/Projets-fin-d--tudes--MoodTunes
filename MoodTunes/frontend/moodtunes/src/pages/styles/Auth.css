@@ -38,7 +38,6 @@
 
 .auth-header h1{
   margin: 0;
-  font-size: 1.8rem;
 }
 
 .auth-header p{
@@ -62,7 +61,6 @@
   flex-direction: column;
   gap: 6px;
   font-weight: 600;
-  font-size: 0.95rem;
 }
 
 .auth-input{
@@ -87,7 +85,6 @@
   margin: 4px 0 0 0;
   color: #b00020;
   font-weight: 600;
-  font-size: 0.95rem;
 }
 
 /* =========================
@@ -128,7 +125,6 @@
   display: flex;
   justify-content: center;
   gap: 10px;
-  font-size: 0.95rem;
   opacity: 0.9;
 }
 

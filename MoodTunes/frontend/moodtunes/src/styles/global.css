@@ -27,14 +27,16 @@ body {
 
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Raleway:ital,wght@0,100..900;1,100..900&display=swap');
 
-.intro-overlay, h1, h2{
+.intro-title, h1, h2, a{
     font-family: 'Titles', Arial, sans-serif ;
+    letter-spacing: 0.1em;
 }
 
 
 
-p, button{
+p, button, label, input, .auth-subgenres{
     font-family: 'Montserrat';
+    letter-spacing: 0.1em;
 }
 
 
