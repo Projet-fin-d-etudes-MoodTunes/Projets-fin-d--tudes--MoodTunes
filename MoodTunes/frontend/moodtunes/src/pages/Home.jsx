@@ -66,8 +66,8 @@ const EMOTIONS = [
     energy: "Élevée",
     movementLabel: "Ondulations",
     sensation: "Joyeuses",
-    gradient: ["#DFD8A1", "#FFBF76", "#C7F6F3"],
-    animationSpeed: 2.1,
+    gradient: ["#9d934c", "#9d6b33", "#2d5b58"],
+    animationSpeed: 2.6,
     bendStrength: -1.35,
     parallaxStrength: 0.48,
     lineDistance: 2,
@@ -131,7 +131,7 @@ const EMOTIONS = [
     movementLabel: "Rapide",
     sensation: "Dynamique",
     gradient: ["#C3070A", "#CC7930", "#19C919"],
-    animationSpeed: 2.4,
+    animationSpeed: 3.4,
     bendStrength: -1.6,
     parallaxStrength: 0.6,
     lineDistance: 2,
@@ -235,6 +235,19 @@ export default function Home() {
     []
   );
 
+  const getOverlayOpacity = (id) => {
+    const map = {
+      base: 0.4,
+      heureux: 0.55,   // très lumineux → on assombrit plus
+      calme: 0.45,
+      amour: 0.5,
+      triste: 0.35,    // déjà sombre → moins d’overlay
+      energique: 0.6,  // rouge/vert très agressif
+    };
+
+    return map[id] ?? 0.5;
+  };
+
   return (
     <AppShell onLogout={handleLogout}>
       <div className="home-root">
@@ -257,7 +270,12 @@ export default function Home() {
             waveThickness={active.waveThickness}
           />
         </div>
-
+        <div
+          className="ui-overlay"
+          style={{
+            background: `rgba(0,0,0,${getOverlayOpacity(emotionId)})`,
+          }}
+        />
         {/* ✅ animation container */}
         <div
           className={[

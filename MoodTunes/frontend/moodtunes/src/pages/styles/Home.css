@@ -9,7 +9,15 @@
   inset: 0;
   width: 100vw;
   height: 100vh;
-  z-index: -1;         
+  z-index: -0;         
+}
+
+.ui-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  transition: background 400ms ease;
 }
 
 .floating-bg,
@@ -34,7 +42,7 @@
 /* contenu */
 .home-content{
   position: relative;
-  z-index: 1;
+  z-index: 2;
   padding: 18px 16px;
   color: #fff;
   text-align: center;
