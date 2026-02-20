@@ -18,7 +18,7 @@ SPOTIFY_CLIENT_ID = os.getenv("SPOTIFY_CLIENT_ID")
 SPOTIFY_CLIENT_SECRET = os.getenv("SPOTIFY_CLIENT_SECRET")
 SPOTIFY_REDIRECT_URI = os.getenv("SPOTIFY_REDIRECT_URI")
 
-spotify_access_token = None  # stocké temporairement
+ACCESS_TOKEN = os.getenv("SPOTIFY_TOKEN")
 
 
 # ===============================
@@ -44,7 +44,7 @@ def spotify_login():
 # ===============================
 @app.route("/spotify/callback")
 def spotify_callback():
-    global spotify_access_token
+    global ACCESS_TOKEN
 
     code = request.args.get("code")
 
@@ -68,11 +68,11 @@ def spotify_callback():
     response = requests.post(url, headers=headers, data=data)
     json_result = response.json()
 
-    spotify_access_token = json_result.get("access_token")
+    ACCESS_TOKEN = json_result.get("access_token")
 
     return jsonify({
         "message": "Spotify connecté avec succès ✅",
-        "access_token": spotify_access_token
+        "access_token": ACCESS_TOKEN
     })
 
 
@@ -149,6 +149,9 @@ def recommend():
     user_id = data.get("user_id")
     emotion = data.get("emotion")
 
+    print("DATA RECEIVED:", data)
+    print("USER_ID:", user_id)
+    print("EMOTION:", emotion)
     if not user_id or not emotion:
         return jsonify({"error": "Missing data"}), 400
 
@@ -210,6 +213,7 @@ def recommend():
         "artist": track["artist"],
         "embed_url": track["embed_url"]
     })
+
 # ===============================
 # Vote du user
 # ===============================

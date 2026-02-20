@@ -1,4 +1,3 @@
-// src/pages/Home.jsx
 import { useContext, useMemo, useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../AuthContext";
@@ -6,42 +5,8 @@ import AppShell from "../components/AppShell";
 import FloatingLines from "../components/FloatingLines";
 import "./styles/Home.css";
 
-// THEME DE BASE (par défaut / refresh)
+// THEME DE BASE
 const BASE_GRADIENT = ["#363742", "#7160a5", "#457287"];
-
-// Spotify embeds
-const EMOTION_TRACKS = {
-  heureux: {
-    title: "MoodTunes — Heureux",
-    artist: "À définir",
-    embedUrl:
-      "https://open.spotify.com/embed/track/60nZcImufyMA1MKQY3dcCH?utm_source=generator",
-  },
-  calme: {
-    title: "MoodTunes — Calme",
-    artist: "À définir",
-    embedUrl:
-      "https://open.spotify.com/embed/track/0oufSLnKQDoBFX5mgkDCgR?utm_source=generator",
-  },
-  amour: {
-    title: "MoodTunes — Amour",
-    artist: "À définir",
-    embedUrl:
-      "https://open.spotify.com/embed/track/3DZQ6mzUkAdHqZWzqxBKIK?utm_source=generator",
-  },
-  triste: {
-    title: "MoodTunes — Triste",
-    artist: "À définir",
-    embedUrl:
-      "https://open.spotify.com/embed/track/047fCsbO4NdmwCBn8pcUXl?utm_source=generator",
-  },
-  energique: {
-    title: "MoodTunes — Énergique",
-    artist: "À définir",
-    embedUrl:
-      "https://open.spotify.com/embed/track/1BIXs6CdkPRLytuqoXs6XN?utm_source=generator",
-  },
-};
 
 const EMOTIONS = [
   {
@@ -142,20 +107,14 @@ const EMOTIONS = [
   },
 ];
 
-function getFeedbackKey(username) {
-  return `moodtunes_feedback_v1__${username || "guest"}`;
-}
-
 export default function Home() {
-  
   const { user, setUser } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const [screen, setScreen] = useState("choose");
   const [emotionId, setEmotionId] = useState("base");
-  const [feedback, setFeedback] = useState({});
+  const [currentTrack, setCurrentTrack] = useState(null);
 
-  // animations
   const [mounted, setMounted] = useState(false);
   const [transitioning, setTransitioning] = useState(false);
 
@@ -164,65 +123,74 @@ export default function Home() {
     [emotionId]
   );
 
-  const activeTrack = EMOTION_TRACKS[emotionId] || null;
-  
-  // 
   useEffect(() => {
     const id = requestAnimationFrame(() => setMounted(true));
     return () => cancelAnimationFrame(id);
   }, []);
 
-  // Charger feedback au mount + quand user change
-  useEffect(() => {
-    const key = getFeedbackKey(user?.username);
-    const raw = localStorage.getItem(key);
-    setFeedback(raw ? JSON.parse(raw) : {});
-  }, [user?.username]);
-
-  const persistFeedback = (next) => {
-    const key = getFeedbackKey(user?.username);
-    localStorage.setItem(key, JSON.stringify(next));
-    setUser((prev) => (prev ? { ...prev, feedback: next } : prev));
-  };
-
-  // Transition screen (fade-out -> switch -> fade-in)
   const goToScreen = useCallback((nextScreen) => {
     setTransitioning(true);
     window.setTimeout(() => {
       setScreen(nextScreen);
       setTransitioning(false);
-    }, 220); 
+    }, 220);
   }, []);
 
-  const handleChooseEmotion = (id) => {
-    setEmotionId(id);
-    goToScreen("player");
+  const handleChooseEmotion = async (id) => {
+    try {
+      console.log("USER:", user);
+      console.log("Sending:", {
+        user_id: user?.id,
+        emotion: id,
+      });
+      const response = await fetch("http://localhost:5000/recommend", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: user.id,
+          emotion: id,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error(data.error);
+        return;
+      }
+
+      setCurrentTrack(data);
+      setEmotionId(id);
+      setScreen("player");
+    } catch (err) {
+      console.error("Erreur recommend:", err);
+    }
   };
 
-  const handleVote = (liked) => {
-    if (!activeTrack) {
+  const handleVote = async (liked) => {
+    if (!currentTrack) {
       goToScreen("choose");
       return;
     }
 
-    const entry = {
-      liked,
-      embedUrl: activeTrack.embedUrl,
-      title: activeTrack.title,
-      artist: activeTrack.artist,
-      ts: Date.now(),
-    };
+    try {
+      await fetch("http://localhost:5000/vote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: user.id,
+          track_id: currentTrack.track_id,
+          emotion: emotionId,
+          liked: liked ? 1 : 0,
+        }),
+      });
 
-    const next = { ...feedback, [emotionId]: entry };
-    setFeedback(next);
-    persistFeedback(next);
-
-    // Après avis, retour automatique au choix (avec animation)
-    window.setTimeout(() => {
-      goToScreen("choose");
-      // remettre le thème base après avis 
-      // setEmotionId("base");
-    }, 300);
+      window.setTimeout(() => {
+        goToScreen("choose");
+      }, 300);
+    } catch (err) {
+      console.error("Erreur vote:", err);
+    }
   };
 
   const handleLogout = () => {
@@ -239,13 +207,12 @@ export default function Home() {
   const getOverlayOpacity = (id) => {
     const map = {
       base: 0.4,
-      heureux: 0.55,   // très lumineux → on assombrit plus
+      heureux: 0.55,
       calme: 0.45,
       amour: 0.5,
-      triste: 0.35,    // déjà sombre → moins d’overlay
-      energique: 0.6,  // rouge/vert très agressif
+      triste: 0.35,
+      energique: 0.6,
     };
-
     return map[id] ?? 0.5;
   };
 
@@ -271,13 +238,14 @@ export default function Home() {
             waveThickness={active.waveThickness}
           />
         </div>
+
         <div
           className="ui-overlay"
           style={{
             background: `rgba(0,0,0,${getOverlayOpacity(emotionId)})`,
           }}
         />
-        {/* ✅ animation container */}
+
         <div
           className={[
             "home-content",
@@ -317,8 +285,8 @@ export default function Home() {
                   <h1 className="player-emotion">{active.label}</h1>
                   <p className="player-sub">
                     Je vous recommande{" "}
-                    {activeTrack?.title || "une musique"} • de{" "}
-                    {activeTrack?.artist || "..." }
+                    {currentTrack?.name || "une musique"} • de{" "}
+                    {currentTrack?.artist || "..."}
                   </p>
                 </div>
               </div>
@@ -326,7 +294,7 @@ export default function Home() {
               <div className="spotify-card">
                 <iframe
                   title={`Spotify-${emotionId}`}
-                  src={activeTrack?.embedUrl}
+                  src={currentTrack?.embed_url}
                   width="100%"
                   height="152"
                   frameBorder="0"
@@ -338,9 +306,7 @@ export default function Home() {
               <div className="vote-row">
                 <button
                   type="button"
-                  className={`vote-btn like ${
-                    feedback?.[emotionId]?.liked === true ? "is-active" : ""
-                  }`}
+                  className="vote-btn like"
                   onClick={() => handleVote(true)}
                 >
                   J’aime
@@ -348,9 +314,7 @@ export default function Home() {
 
                 <button
                   type="button"
-                  className={`vote-btn dislike ${
-                    feedback?.[emotionId]?.liked === false ? "is-active" : ""
-                  }`}
+                  className="vote-btn dislike"
                   onClick={() => handleVote(false)}
                 >
                   J’aime pas
