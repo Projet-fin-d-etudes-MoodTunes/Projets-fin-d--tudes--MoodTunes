@@ -7,6 +7,7 @@ import requests
 import base64
 from dotenv import load_dotenv
 from database import get_db
+import random
 
 load_dotenv()
 
@@ -21,7 +22,7 @@ spotify_access_token = None  # stocké temporairement
 
 
 # ===============================
-# 🔐 Spotify Login
+# Spotify Login
 # ===============================
 @app.route("/spotify/login")
 def spotify_login():
@@ -39,7 +40,7 @@ def spotify_login():
 
 
 # ===============================
-# 🔐 Spotify Callback
+# Spotify Callback
 # ===============================
 @app.route("/spotify/callback")
 def spotify_callback():
@@ -76,7 +77,7 @@ def spotify_callback():
 
 
 # ===============================
-# 👤 Signup
+# Signup
 # ===============================
 @app.route("/signup", methods=["POST"])
 def signup():
@@ -110,7 +111,7 @@ def signup():
 
 
 # ===============================
-# 👤 Login
+# Login
 # ===============================
 @app.route("/login", methods=["POST"])
 def login():
@@ -136,6 +137,108 @@ def login():
         "username": user["username"],
         "genres": json.loads(user["genres"])
     })
+
+# ===============================
+# RECOMMENDATION
+# ===============================
+
+
+@app.route("/recommend", methods=["POST"])
+def recommend():
+    data = request.json
+    user_id = data.get("user_id")
+    emotion = data.get("emotion")
+
+    if not user_id or not emotion:
+        return jsonify({"error": "Missing data"}), 400
+
+    db = get_db()
+    cursor = db.cursor()
+
+    # 1️⃣ Récupérer genres du user
+    cursor.execute("SELECT genres FROM users WHERE id = ?", (user_id,))
+    user = cursor.fetchone()
+
+    if not user:
+        db.close()
+        return jsonify({"error": "User not found"}), 404
+
+    genres = json.loads(user["genres"])
+
+    if not genres:
+        db.close()
+        return jsonify({"error": "No genres"}), 400
+
+    placeholders = ",".join("?" * len(genres))
+
+    query = f"""
+        SELECT *
+        FROM tracks
+        WHERE emotion = ?
+        AND genre IN ({placeholders})
+        AND id NOT IN (
+            SELECT track_id
+            FROM user_history
+            WHERE user_id = ?
+            AND liked = 0
+        )
+        AND id NOT IN (
+            SELECT track_id
+            FROM user_history
+            WHERE user_id = ?
+            ORDER BY timestamp DESC
+            LIMIT 10
+        )
+        ORDER BY RANDOM()
+        LIMIT 1
+    """
+
+    params = [emotion, *genres, user_id, user_id]
+
+    cursor.execute(query, params)
+    track = cursor.fetchone()
+
+    db.close()
+
+    if not track:
+        return jsonify({"error": "No track available"}), 404
+
+    return jsonify({
+        "track_id": track["id"],
+        "spotify_id": track["spotify_id"],
+        "name": track["name"],
+        "artist": track["artist"],
+        "embed_url": track["embed_url"]
+    })
+# ===============================
+# Vote du user
+# ===============================
+
+
+@app.route("/vote", methods=["POST"])
+def vote():
+    data = request.json
+
+    user_id = data.get("user_id")
+    track_id = data.get("track_id")
+    emotion = data.get("emotion")
+    liked = data.get("liked")
+
+    if user_id is None or track_id is None or emotion is None or liked is None:
+        return jsonify({"error": "Missing data"}), 400
+
+    db = get_db()
+    cursor = db.cursor()
+
+    cursor.execute("""
+        INSERT INTO user_history (user_id, track_id, emotion, liked)
+        VALUES (?, ?, ?, ?)
+    """, (user_id, track_id, emotion, liked))
+
+    db.commit()
+    db.close()
+
+    return jsonify({"message": "Vote saved"})
 
 
 if __name__ == "__main__":

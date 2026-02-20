@@ -147,6 +147,7 @@ function getFeedbackKey(username) {
 }
 
 export default function Home() {
+  
   const { user, setUser } = useContext(AuthContext);
   const navigate = useNavigate();
 
@@ -164,7 +165,7 @@ export default function Home() {
   );
 
   const activeTrack = EMOTION_TRACKS[emotionId] || null;
-
+  
   // 
   useEffect(() => {
     const id = requestAnimationFrame(() => setMounted(true));
