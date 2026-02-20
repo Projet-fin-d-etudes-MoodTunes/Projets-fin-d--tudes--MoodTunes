@@ -125,7 +125,7 @@ function SignUp() {
           </label>
 
           <div className="auth-genres">
-            <div className="auth-genres-title">Genres favoris</div>
+            <h2 className="auth-genres-title">Genres favoris</h2>
 
             {GENRES.map((genre) => (
               <div key={genre.id} className="auth-genre-group">

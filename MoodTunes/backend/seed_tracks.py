@@ -31,12 +31,13 @@ def save_tracks(tracks, emotion, genre, playlist_id):
 
 
 def main():
-    # for i, playlist in enumerate(PLAYLISTS):
-    #     print(f"[{i+1}/{len(PLAYLISTS)}] ➡️ Import playlist {playlist['playlist_id']} | {playlist['emotion']} | {playlist['genre']}")
-    for i, playlist in enumerate(PLAYLISTS[:1]):
-        print(f"[{i+1}/1] ➡️ Import playlist {playlist['playlist_id']} | {playlist['emotion']} | {playlist['genre']}")
+    for i, playlist in enumerate(PLAYLISTS):
+        print(f"[{i+1}/{len(PLAYLISTS)}] ➡️ Import playlist {playlist['playlist_id']} | {playlist['emotion']} | {playlist['genre']}")
+    # for i, playlist in enumerate(PLAYLISTS[:2]):
+    #     print(f"[{i+1}/1] ➡️ Import playlist {playlist['playlist_id']} | {playlist['emotion']} | {playlist['genre']}")
 
         tracks = fetch_playlist_tracks(playlist["playlist_id"])
+        print("Nombre de tracks récupérés :", len(tracks))
 
         save_tracks(
             tracks,
@@ -46,8 +47,8 @@ def main():
         )
 
         # Pause entre chaque playlist
-        print("⏳ Pause 7 secondes...")
-        time.sleep(7)
+        print("⏳ Pause 5 secondes...")
+        time.sleep(10)
 
     print("✅ Import terminé")
 

@@ -56,10 +56,10 @@ def fetch_playlist_tracks(playlist_id):
 
         data = result.json()
 
-        for item in data.get("items", []):
-            track = item.get("track")
+        for item in data["items"]:
+            track = item.get("item")
 
-            if track and track.get("id"):
+            if track and track["type"] == "track":
                 tracks.append({
                     "spotify_id": track["id"],
                     "name": track["name"],
@@ -68,5 +68,9 @@ def fetch_playlist_tracks(playlist_id):
                 })
 
         url = data.get("next")
+        # 20 secondes de pause entre CHAQUE requête
+        time.sleep(20)
+
+    print("Nombre de tracks récupérés :", len(tracks))
 
     return tracks
