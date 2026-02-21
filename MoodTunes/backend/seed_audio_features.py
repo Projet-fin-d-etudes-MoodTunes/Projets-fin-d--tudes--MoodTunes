@@ -108,7 +108,6 @@ def main():
         SELECT id, spotify_id
         FROM tracks
         WHERE energy IS NULL
-        LIMIT 200
     """)
 
     tracks = cursor.fetchall()
