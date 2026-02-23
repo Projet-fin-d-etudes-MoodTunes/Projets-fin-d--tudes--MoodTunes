@@ -143,47 +143,46 @@ def login():
 # ===============================
 
 
+EMOTION_PROFILES = {
+    "heureux": {"energy_min": 0.6, "valence_min": 0.6},
+    "calme": {"energy_max": 0.4},
+    "triste": {"valence_max": 0.4},
+    "energique": {"energy_min": 0.75},
+    "amour": {"valence_min": 0.4, "energy_max": 0.7}
+}
+
+
 @app.route("/recommend", methods=["POST"])
 def recommend():
     data = request.json
     user_id = data.get("user_id")
     emotion = data.get("emotion")
 
-    print("DATA RECEIVED:", data)
-    print("USER_ID:", user_id)
-    print("EMOTION:", emotion)
-    if not user_id or not emotion:
-        return jsonify({"error": "Missing data"}), 400
-
     db = get_db()
     cursor = db.cursor()
 
-    # 1️⃣ Récupérer genres du user
+    # 1️⃣ Récupérer genres utilisateur
     cursor.execute("SELECT genres FROM users WHERE id = ?", (user_id,))
     user = cursor.fetchone()
 
     if not user:
         db.close()
-        return jsonify({"error": "User not found"}), 404
+        return jsonify({"error": "Utilisateur introuvable"}), 404
 
-    genres = json.loads(user["genres"])
+    user_genres = json.loads(user["genres"])
 
-    if not genres:
-        db.close()
-        return jsonify({"error": "No genres"}), 400
-
-    placeholders = ",".join("?" * len(genres))
+    placeholders = ",".join(["?"] * len(user_genres))
 
     query = f"""
         SELECT *
         FROM tracks
         WHERE emotion = ?
         AND genre IN ({placeholders})
+        AND energy >= 0
         AND id NOT IN (
             SELECT track_id
             FROM user_history
-            WHERE user_id = ?
-            AND liked = 0
+            WHERE user_id = ? AND liked = 0
         )
         AND id NOT IN (
             SELECT track_id
@@ -193,25 +192,51 @@ def recommend():
             LIMIT 10
         )
         ORDER BY RANDOM()
-        LIMIT 1
+        LIMIT 100
     """
 
-    params = [emotion, *genres, user_id, user_id]
+    params = [emotion] + user_genres + [user_id, user_id]
 
     cursor.execute(query, params)
-    track = cursor.fetchone()
+    candidates = cursor.fetchall()
+
+    if not candidates:
+        db.close()
+        return jsonify({"error": "Aucune musique trouvée"}), 404
+
+    # 2️⃣ Filtrage audio features
+    profile = EMOTION_PROFILES.get(emotion, {})
+
+    filtered = []
+
+    for track in candidates:
+        valid = True
+
+        if "energy_min" in profile and track["energy"] < profile["energy_min"]:
+            valid = False
+        if "energy_max" in profile and track["energy"] > profile["energy_max"]:
+            valid = False
+        if "valence_min" in profile and track["valence"] < profile["valence_min"]:
+            valid = False
+        if "valence_max" in profile and track["valence"] > profile["valence_max"]:
+            valid = False
+
+        if valid:
+            filtered.append(track)
+
+    if not filtered:
+        filtered = candidates
+
+    chosen = random.choice(filtered)
 
     db.close()
 
-    if not track:
-        return jsonify({"error": "No track available"}), 404
-
     return jsonify({
-        "track_id": track["id"],
-        "spotify_id": track["spotify_id"],
-        "name": track["name"],
-        "artist": track["artist"],
-        "embed_url": track["embed_url"]
+        "track_id": chosen["id"],
+        "spotify_id": chosen["spotify_id"],
+        "name": chosen["name"],
+        "artist": chosen["artist"],
+        "embed_url": chosen["embed_url"]
     })
 
 # ===============================
