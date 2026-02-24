@@ -3,13 +3,13 @@
   min-height: 100vh;
 }
 
-/* background FULL screen, derrière tout */
+
 .floating-bg{
   position: fixed;
   inset: 0;
-  width: 100vw;
-  min-height: 100vh;
-  z-index: -0;         
+  width: 100%;
+  min-height: 100%;
+  overflow: hidden;
 }
 
 .ui-overlay {

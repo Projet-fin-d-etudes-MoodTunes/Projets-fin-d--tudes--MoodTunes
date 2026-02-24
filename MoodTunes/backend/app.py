@@ -179,6 +179,11 @@ def recommend():
         WHERE emotion = ?
         AND genre IN ({placeholders})
         AND energy >= 0
+        AND valence >= 0
+        AND danceability >= 0
+        AND acousticness >= 0
+        AND instrumentalness >= 0
+        AND speechiness >= 0
         AND id NOT IN (
             SELECT track_id
             FROM user_history
