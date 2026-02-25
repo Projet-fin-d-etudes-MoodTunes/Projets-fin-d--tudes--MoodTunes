@@ -6,6 +6,7 @@ import os
 import requests
 import base64
 from dotenv import load_dotenv
+from train_model import train_model_for_user
 from database import get_db
 import random
 import joblib
@@ -242,7 +243,6 @@ def recommend():
     model_path = f"../user_model_{user_id}.pkl"
 
     if not os.path.exists(model_path):
-        # fallback si pas encore entraîné
         chosen = random.choice(candidates)
         db.close()
         return jsonify({
@@ -268,9 +268,24 @@ def recommend():
 
     # Construire DataFrame candidats
     df_candidates = pd.DataFrame(candidates)
+
+    # Supprimer lignes invalides
+    df_candidates = df_candidates.dropna(subset=FEATURE_COLUMNS)
+
+    if df_candidates.empty:
+        chosen = random.choice(candidates)
+        db.close()
+        return jsonify({
+            "track_id": chosen["id"],
+            "spotify_id": chosen["spotify_id"],
+            "name": chosen["name"],
+            "artist": chosen["artist"],
+            "embed_url": chosen["embed_url"]
+        })
+
     X_candidates = df_candidates[FEATURE_COLUMNS]
 
-    # Calcul probabilité
+    # Calcul probabilité ML
     probabilities = model.predict_proba(X_candidates)[:, 1]
 
     df_candidates["score"] = probabilities
@@ -278,10 +293,12 @@ def recommend():
     # Trier par score décroissant
     df_candidates = df_candidates.sort_values(by="score", ascending=False)
 
-    # Garder top 30
+    # Top 30
     top_n = df_candidates.head(30)
 
-    # Random pick parmi top
+    print(df_candidates[["name", "score"]].head(10))
+
+    # Random parmi top
     chosen = top_n.sample(1).iloc[0]
 
     db.close()
@@ -293,7 +310,6 @@ def recommend():
         "artist": chosen["artist"],
         "embed_url": chosen["embed_url"]
     })
-
 # ===============================
 # Vote du user
 # ===============================
@@ -314,13 +330,29 @@ def vote():
     db = get_db()
     cursor = db.cursor()
 
+    # Sauvegarder vote
     cursor.execute("""
         INSERT INTO user_history (user_id, track_id, emotion, liked)
         VALUES (?, ?, ?, ?)
     """, (user_id, track_id, emotion, liked))
 
     db.commit()
+
+    # Compter interactions
+    cursor.execute("""
+        SELECT COUNT(*) as total
+        FROM user_history
+        WHERE user_id = ?
+    """, (user_id,))
+
+    total = cursor.fetchone()["total"]
+
     db.close()
+
+    # Retrain batch de 10
+    if total % 10 == 0 and total >= 20:
+        print(f"🔁 Retraining model for user {user_id} (total={total})")
+        train_model_for_user(user_id)
 
     return jsonify({"message": "Vote saved"})
 

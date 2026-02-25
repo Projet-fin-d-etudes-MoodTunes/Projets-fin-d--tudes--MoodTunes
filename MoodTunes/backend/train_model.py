@@ -6,7 +6,8 @@ from sklearn.metrics import classification_report
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
 import joblib
-
+import matplotlib.pyplot as plt
+import numpy as np
 
 FEATURE_COLUMNS = [
     "energy",
@@ -69,7 +70,7 @@ def train_model_for_user(user_id):
     # Pipeline = scaling + modèle
     pipeline = Pipeline([
         ("scaler", StandardScaler()),
-        ("model", LogisticRegression(max_iter=1000, class_weight="balanced"))
+        ("model", LogisticRegression(max_iter=1000, class_weight="balanced", C=0.5))
     ])
 
     pipeline.fit(X_train, y_train)
@@ -89,6 +90,28 @@ def train_model_for_user(user_id):
     joblib.dump(pipeline, f"user_model_{user_id}.pkl")
 
     print(f"\n✅ Modèle sauvegardé pour utilisateur {user_id}")
+
+    # Visualisation graphique
+
+    coefficients = model.coef_[0]
+    features = FEATURE_COLUMNS
+
+    # 📊 Graphique 1 — direction + importance
+    plt.figure(figsize=(10, 6))
+    plt.barh(features, coefficients)
+    plt.axvline(0)
+    plt.title("Importance des Audio Features (direction)")
+    plt.xlabel("Coefficient (influence sur le like)")
+    plt.tight_layout()
+    plt.show()
+
+    # 📊 Graphique 2 — magnitude seulement
+    plt.figure(figsize=(10, 6))
+    plt.barh(features, np.abs(coefficients))
+    plt.title("Magnitude des influences (valeur absolue)")
+    plt.xlabel("Force de l'influence")
+    plt.tight_layout()
+    plt.show()
 
     return pipeline
 
