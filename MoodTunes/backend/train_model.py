@@ -3,6 +3,8 @@ import pandas as pd
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import Pipeline
 import joblib
 
 
@@ -36,6 +38,12 @@ def load_user_dataset(user_id):
         JOIN tracks t ON h.track_id = t.id
         WHERE h.user_id = ?
         AND t.energy >= 0
+        AND t.valence >= 0
+        AND t.danceability >= 0
+        AND t.acousticness >= 0
+        AND t.instrumentalness >= 0
+        AND t.speechiness >= 0
+        AND t.tempo >= 0
     """
 
     df = pd.read_sql_query(query, db, params=(user_id,))
@@ -48,7 +56,7 @@ def train_model_for_user(user_id):
     df = load_user_dataset(user_id)
 
     if len(df) < 20:
-        print("⚠ Pas assez de données pour entraîner un modèle.")
+        print("⚠ Pas assez de données.")
         return None
 
     X = df[FEATURE_COLUMNS]
@@ -58,20 +66,31 @@ def train_model_for_user(user_id):
         X, y, test_size=0.2, random_state=42
     )
 
-    model = LogisticRegression(max_iter=1000)
-    model.fit(X_train, y_train)
+    # Pipeline = scaling + modèle
+    pipeline = Pipeline([
+        ("scaler", StandardScaler()),
+        ("model", LogisticRegression(max_iter=1000, class_weight="balanced"))
+    ])
 
-    y_pred = model.predict(X_test)
+    pipeline.fit(X_train, y_train)
+
+    y_pred = pipeline.predict(X_test)
 
     print("\n=== Rapport de classification ===")
     print(classification_report(y_test, y_pred))
 
-    # Sauvegarder modèle
-    joblib.dump(model, f"user_model_{user_id}.pkl")
+    model = pipeline.named_steps["model"]
+
+    print("\n=== Coefficients du modèle ===")
+    for feature, coef in zip(FEATURE_COLUMNS, model.coef_[0]):
+        print(f"{feature}: {coef:.3f}")
+
+    # Sauvegarder pipeline complet
+    joblib.dump(pipeline, f"user_model_{user_id}.pkl")
 
     print(f"\n✅ Modèle sauvegardé pour utilisateur {user_id}")
 
-    return model
+    return pipeline
 
 
 if __name__ == "__main__":

@@ -8,6 +8,8 @@ import base64
 from dotenv import load_dotenv
 from database import get_db
 import random
+import joblib
+import pandas as pd
 
 load_dotenv()
 
@@ -143,25 +145,19 @@ def login():
 # ===============================
 
 
-EMOTION_PROFILES = {
-    "heureux": {"energy_min": 0.6, "valence_min": 0.6},
-    "calme": {"energy_max": 0.4},
-    "triste": {"valence_max": 0.4},
-    "energique": {"energy_min": 0.75},
-    "amour": {"valence_min": 0.4, "energy_max": 0.7}
-}
-
-
 @app.route("/recommend", methods=["POST"])
 def recommend():
     data = request.json
     user_id = data.get("user_id")
     emotion = data.get("emotion")
 
+    if not user_id or not emotion:
+        return jsonify({"error": "Missing data"}), 400
+
     db = get_db()
     cursor = db.cursor()
 
-    # 1️⃣ Récupérer genres utilisateur
+    #  Récupérer genres utilisateur
     cursor.execute("SELECT genres FROM users WHERE id = ?", (user_id,))
     user = cursor.fetchone()
 
@@ -170,9 +166,9 @@ def recommend():
         return jsonify({"error": "Utilisateur introuvable"}), 404
 
     user_genres = json.loads(user["genres"])
-
     placeholders = ",".join(["?"] * len(user_genres))
 
+    # Filtrage de base
     query = f"""
         SELECT *
         FROM tracks
@@ -184,6 +180,7 @@ def recommend():
         AND acousticness >= 0
         AND instrumentalness >= 0
         AND speechiness >= 0
+        AND tempo >= 0
         AND id NOT IN (
             SELECT track_id
             FROM user_history
@@ -197,22 +194,24 @@ def recommend():
             LIMIT 10
         )
         ORDER BY RANDOM()
-        LIMIT 100
+        LIMIT 200
     """
 
     params = [emotion] + user_genres + [user_id, user_id]
-
     cursor.execute(query, params)
     candidates = cursor.fetchall()
 
-    if not candidates:
-        db.close()
-        return jsonify({"error": "Aucune musique trouvée"}), 404
+    EMOTION_PROFILES = {
+        "heureux": {"energy_min": 0.6, "valence_min": 0.6},
+        "calme": {"energy_max": 0.4},
+        "triste": {"valence_max": 0.4},
+        "energique": {"energy_min": 0.75},
+        "amour": {"valence_min": 0.4, "energy_max": 0.7}
+    }
 
-    # 2️⃣ Filtrage audio features
     profile = EMOTION_PROFILES.get(emotion, {})
 
-    filtered = []
+    filtered_candidates = []
 
     for track in candidates:
         valid = True
@@ -227,17 +226,68 @@ def recommend():
             valid = False
 
         if valid:
-            filtered.append(track)
+            filtered_candidates.append(track)
 
-    if not filtered:
-        filtered = candidates
+    # fallback si trop strict
+    if not filtered_candidates:
+        filtered_candidates = candidates
 
-    chosen = random.choice(filtered)
+    candidates = filtered_candidates
+
+    if not candidates:
+        db.close()
+        return jsonify({"error": "Aucune musique trouvée"}), 404
+
+    # Charger modèle
+    model_path = f"../user_model_{user_id}.pkl"
+
+    if not os.path.exists(model_path):
+        # fallback si pas encore entraîné
+        chosen = random.choice(candidates)
+        db.close()
+        return jsonify({
+            "track_id": chosen["id"],
+            "spotify_id": chosen["spotify_id"],
+            "name": chosen["name"],
+            "artist": chosen["artist"],
+            "embed_url": chosen["embed_url"]
+        })
+
+    model = joblib.load(model_path)
+
+    FEATURE_COLUMNS = [
+        "energy",
+        "valence",
+        "danceability",
+        "acousticness",
+        "instrumentalness",
+        "speechiness",
+        "tempo",
+        "loudness"
+    ]
+
+    # Construire DataFrame candidats
+    df_candidates = pd.DataFrame(candidates)
+    X_candidates = df_candidates[FEATURE_COLUMNS]
+
+    # Calcul probabilité
+    probabilities = model.predict_proba(X_candidates)[:, 1]
+
+    df_candidates["score"] = probabilities
+
+    # Trier par score décroissant
+    df_candidates = df_candidates.sort_values(by="score", ascending=False)
+
+    # Garder top 30
+    top_n = df_candidates.head(30)
+
+    # Random pick parmi top
+    chosen = top_n.sample(1).iloc[0]
 
     db.close()
 
     return jsonify({
-        "track_id": chosen["id"],
+        "track_id": int(chosen["id"]),
         "spotify_id": chosen["spotify_id"],
         "name": chosen["name"],
         "artist": chosen["artist"],
