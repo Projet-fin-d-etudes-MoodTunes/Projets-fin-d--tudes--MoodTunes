@@ -93,25 +93,25 @@ def train_model_for_user(user_id):
 
     # Visualisation graphique
 
-    coefficients = model.coef_[0]
-    features = FEATURE_COLUMNS
+    # coefficients = model.coef_[0]
+    # features = FEATURE_COLUMNS
 
-    # 📊 Graphique 1 — direction + importance
-    plt.figure(figsize=(10, 6))
-    plt.barh(features, coefficients)
-    plt.axvline(0)
-    plt.title("Importance des Audio Features (direction)")
-    plt.xlabel("Coefficient (influence sur le like)")
-    plt.tight_layout()
-    plt.show()
+    # # 📊 Graphique 1 — direction + importance
+    # plt.figure(figsize=(10, 6))
+    # plt.barh(features, coefficients)
+    # plt.axvline(0)
+    # plt.title("Importance des Audio Features (direction)")
+    # plt.xlabel("Coefficient (influence sur le like)")
+    # plt.tight_layout()
+    # plt.show()
 
-    # 📊 Graphique 2 — magnitude seulement
-    plt.figure(figsize=(10, 6))
-    plt.barh(features, np.abs(coefficients))
-    plt.title("Magnitude des influences (valeur absolue)")
-    plt.xlabel("Force de l'influence")
-    plt.tight_layout()
-    plt.show()
+    # # 📊 Graphique 2 — magnitude seulement
+    # plt.figure(figsize=(10, 6))
+    # plt.barh(features, np.abs(coefficients))
+    # plt.title("Magnitude des influences (valeur absolue)")
+    # plt.xlabel("Force de l'influence")
+    # plt.tight_layout()
+    # plt.show()
 
     return pipeline
 
