@@ -264,7 +264,7 @@ export default function Home() {
                   <button
                     key={e.id}
                     type="button"
-                    className="emotion-card"
+                    className={`emotion-card ${emotionId === e.id ? "is-active" : ""}`}
                     onClick={() => handleChooseEmotion(e.id)}
                   >
                     <div className="emotion-title">{e.label}</div>
