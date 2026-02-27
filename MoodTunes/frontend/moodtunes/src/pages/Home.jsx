@@ -216,6 +216,8 @@ export default function Home() {
     return map[id] ?? 0.5;
   };
 
+  
+
   return (
     <AppShell onLogout={handleLogout}>
       <div className="home-root">
@@ -280,46 +282,48 @@ export default function Home() {
             </>
           ) : (
             <>
-              <div className="player-top">
-                <div className="player-title">
-                  <h1 className="player-emotion">{active.label}</h1>
-                  <p className="player-sub">
-                    Je vous recommande{" "}
-                    {currentTrack?.name || "une musique"} • de{" "}
-                    {currentTrack?.artist || "..."}
-                  </p>
+               <div className="player-wrapper">
+                <div className="player-top">
+                  <div className="player-title">
+                    <h1 className="player-emotion">{active.label}</h1>
+                    <p className="player-sub">
+                      Je vous recommande{" "}
+                      {currentTrack?.name || "une musique"} • de{" "}
+                      {currentTrack?.artist || "..."}
+                    </p>
+                  </div>
                 </div>
-              </div>
 
-              <div className="spotify-card">
-                <iframe
-                  title={`Spotify-${emotionId}`}
-                  src={currentTrack?.embed_url}
-                  width="100%"
-                  height="152"
-                  frameBorder="0"
-                  allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                  loading="lazy"
-                />
-              </div>
+                <div className="spotify-card">
+                  <iframe
+                    title={`Spotify-${emotionId}`}
+                    src={currentTrack?.embed_url}
+                    width="100%"
+                    height="152"
+                    frameBorder="0"
+                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                    loading="lazy"
+                  />
+                </div>
 
-              <div className="vote-row">
-                <button
-                  type="button"
-                  className="vote-btn like"
-                  onClick={() => handleVote(true)}
-                >
-                  J’aime
-                </button>
+                <div className="vote-row">
+                  <button
+                    type="button"
+                    className="vote-btn like"
+                    onClick={() => handleVote(true)}
+                  >
+                    J’aime
+                  </button>
 
-                <button
-                  type="button"
-                  className="vote-btn dislike"
-                  onClick={() => handleVote(false)}
-                >
-                  J’aime pas
-                </button>
-              </div>
+                  <button
+                    type="button"
+                    className="vote-btn dislike"
+                    onClick={() => handleVote(false)}
+                  >
+                    J’aime pas
+                  </button>
+                </div>
+             </div>
             </>
           )}
         </div>
