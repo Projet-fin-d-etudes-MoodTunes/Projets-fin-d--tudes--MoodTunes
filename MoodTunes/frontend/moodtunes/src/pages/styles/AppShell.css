@@ -98,14 +98,8 @@
 .footer-link {
   color: #fff;
   text-decoration: none;
-  font-weight: 700;
-  opacity: 0.9;
-  transition: opacity 200ms ease;
 }
 
-.footer-link:hover {
-  opacity: 1;
-}
 
 .footer-right {
   display: flex;
@@ -115,12 +109,10 @@
 .footer-icon {
   color: #fff;
   font-size: 1.2rem;
-  opacity: 0.85;
   transition: transform 200ms ease, opacity 200ms ease;
 }
 
 .footer-icon:hover {
-  opacity: 1;
   transform: translateY(-2px);
 }
 

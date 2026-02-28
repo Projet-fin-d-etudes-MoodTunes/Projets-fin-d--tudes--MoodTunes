@@ -396,5 +396,35 @@ def get_saved_tracks(user_id):
     ])
 
 
+# ===============================
+# Update user preferences
+# ===============================
+@app.route("/preferences", methods=["PUT"])
+def update_preferences():
+    data = request.json
+    user_id = data.get("user_id")
+    genres = data.get("genres")
+
+    if not user_id or not genres:
+        return jsonify({"error": "Missing data"}), 400
+
+    db = get_db()
+    cursor = db.cursor()
+
+    cursor.execute("""
+        UPDATE users
+        SET genres = ?
+        WHERE id = ?
+    """, (json.dumps(genres), user_id))
+
+    db.commit()
+    db.close()
+
+    return jsonify({
+        "message": "Préférences mises à jour",
+        "genres": genres
+    })
+
+
 if __name__ == "__main__":
     app.run(debug=True)
