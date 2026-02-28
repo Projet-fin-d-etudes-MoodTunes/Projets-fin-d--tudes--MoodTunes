@@ -250,4 +250,13 @@
     border-radius: 18px;
   }
 
+  .vote-btn {
+    min-width: 0;   
+    width: 100%;
+  }
+
+  .vote-row {
+    flex-direction: column;
+  }
+
 }

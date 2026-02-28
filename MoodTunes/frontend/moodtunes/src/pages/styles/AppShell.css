@@ -76,22 +76,52 @@
 .burger::after{ top: 7px; }
 
 /* FOOTER */
-.app-footer{
+.app-footer {
   height: 60px;
   background: var(--dark);
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 14px;
-  padding: 0 14px;
+  padding: 0 16px;
   position: fixed;
-  left: 0; right: 0; bottom: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   z-index: 1000;
 }
 
-.footer-link{
+.footer-left {
+  display: flex;
+  gap: 14px;
+}
+
+.footer-link {
   color: #fff;
   text-decoration: none;
   font-weight: 700;
+  opacity: 0.9;
+  transition: opacity 200ms ease;
+}
+
+.footer-link:hover {
+  opacity: 1;
+}
+
+.footer-right {
+  display: flex;
+  gap: 16px;
+}
+
+.footer-icon {
+  color: #fff;
+  font-size: 1.2rem;
+  opacity: 0.85;
+  transition: transform 200ms ease, opacity 200ms ease;
+}
+
+.footer-icon:hover {
+  opacity: 1;
+  transform: translateY(-2px);
 }
 
 /* =========================================
@@ -185,4 +215,14 @@
   line-height: 1.2;
 
   cursor: pointer;
+}
+
+
+@media (max-width: 768px) {
+  .app-footer {
+    flex-direction: column;
+    height: auto;
+    padding: 10px 0;
+    gap: 6px;
+  }
 }

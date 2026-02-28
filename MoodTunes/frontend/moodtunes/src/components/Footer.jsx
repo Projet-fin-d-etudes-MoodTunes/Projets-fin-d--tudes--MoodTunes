@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { FaGithub, FaLinkedin } from "react-icons/fa";
 import "../pages/styles/AppShell.css";
 
 export default function Footer() {
@@ -11,17 +12,39 @@ export default function Footer() {
 
   return (
     <footer className="app-footer">
-      <a href="/about" className="footer-link" onClick={(e) => go(e, "/about")}>
-        À propos
-      </a>
+      <div className="footer-left">
+        <a href="/about" className="footer-link" onClick={(e) => go(e, "/about")}>
+          À propos
+        </a>
 
-      <a href="/saved" className="footer-link" onClick={(e) => go(e, "/saved")}>
-        Musiques sauvegardées
-      </a>
+        <a href="/saved" className="footer-link" onClick={(e) => go(e, "/saved")}>
+          Musiques sauvegardées
+        </a>
 
-      <a href="/preferences" className="footer-link" onClick={(e) => go(e, "/preferences")}>
-        Préférences
-      </a>
+        <a href="/preferences" className="footer-link" onClick={(e) => go(e, "/preferences")}>
+          Préférences
+        </a>
+      </div>
+
+      <div className="footer-right">
+        <a
+          href="https://github.com/perezerik"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="footer-icon"
+        >
+          <FaGithub />
+        </a>
+
+        <a
+          href="https://www.linkedin.com/in/erik-perez-194605269/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="footer-icon"
+        >
+          <FaLinkedin />
+        </a>
+      </div>
     </footer>
   );
 }
