@@ -69,6 +69,7 @@ function SignUp() {
       }
 
       setUser({
+        id: data.id,
         username: data.username,
         genres: data.genres,
       });
@@ -76,6 +77,7 @@ function SignUp() {
       localStorage.setItem(
         "user",
         JSON.stringify({
+          id: data.id,
           username: data.username,
           genres: data.genres,
         })

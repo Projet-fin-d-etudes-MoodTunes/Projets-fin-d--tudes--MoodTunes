@@ -1,6 +1,12 @@
 .saved-root {
+  min-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   padding: 40px;
-  color: #ffffff;
+  color: white;
+
+  animation: fadeSlide 0.6s ease forwards;
 }
 
 .saved-title {
@@ -20,8 +26,10 @@
   padding: 20px;
   border-radius: 16px;
   backdrop-filter: blur(10px);
-  transition: transform 0.2s ease;
-  overflow: hidden;
+  transition: all 0.25s ease;
+
+  animation: fadeSlide 0.5s ease forwards;
+  opacity: 0;
 }
 
 .saved-card iframe {
@@ -42,5 +50,16 @@
 @media (max-width: 768px) {
   .saved-card iframe {
     height: 120px;
+  }
+}
+
+@keyframes fadeSlide {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

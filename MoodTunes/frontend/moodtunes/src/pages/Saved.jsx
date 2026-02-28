@@ -43,8 +43,12 @@ export default function Saved() {
         )}
 
         <div className="saved-grid">
-          {tracks.map(track => (
-            <div key={track.track_id} className="saved-card">
+            {tracks.map((track, index) => (
+              <div
+                key={track.track_id}
+                className="saved-card"
+                style={{ animationDelay: `${index * 0.08}s` }}
+              >
               <div className="saved-track-title">
                 {track.name} — {track.artist}
               </div>

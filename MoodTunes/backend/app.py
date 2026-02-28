@@ -104,13 +104,14 @@ def signup():
                 json.dumps(genres)
             )
         )
+        user_id = cursor.lastrowid
         db.commit()
     except:
         return jsonify({"error": "Utilisateur existe déjà"}), 400
     finally:
         db.close()
 
-    return jsonify({"username": username, "genres": genres}), 201
+    return jsonify({"id": user_id, "username": username, "genres": genres}), 201
 
 
 # ===============================
