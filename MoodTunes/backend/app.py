@@ -357,5 +357,44 @@ def vote():
     return jsonify({"message": "Vote saved"})
 
 
+# ===============================
+# Musiques sauvegardées
+# ===============================
+@app.route("/saved/<int:user_id>", methods=["GET"])
+def get_saved_tracks(user_id):
+    db = get_db()
+    cursor = db.cursor()
+
+    cursor.execute("""
+        SELECT 
+            t.id,
+            t.spotify_id,
+            t.name,
+            t.artist,
+            t.embed_url,
+            MAX(h.timestamp) as last_liked
+        FROM user_history h
+        JOIN tracks t ON h.track_id = t.id
+        WHERE h.user_id = ?
+        AND h.liked = 1
+        GROUP BY t.id
+        ORDER BY last_liked DESC
+    """, (user_id,))
+
+    tracks = cursor.fetchall()
+    db.close()
+
+    return jsonify([
+        {
+            "track_id": track["id"],
+            "spotify_id": track["spotify_id"],
+            "name": track["name"],
+            "artist": track["artist"],
+            "embed_url": track["embed_url"]
+        }
+        for track in tracks
+    ])
+
+
 if __name__ == "__main__":
     app.run(debug=True)

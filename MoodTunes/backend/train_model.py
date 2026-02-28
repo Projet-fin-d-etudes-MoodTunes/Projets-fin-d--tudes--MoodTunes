@@ -117,5 +117,5 @@ def train_model_for_user(user_id):
 
 
 if __name__ == "__main__":
-    USER_ID = 1
+    USER_ID = 1  # En phaase de teste quand je lance le script manuellement ca va le faire pour le user 1, sinon le route dans app.py envoie le user id
     train_model_for_user(USER_ID)
