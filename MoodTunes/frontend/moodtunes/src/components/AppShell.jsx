@@ -1,6 +1,6 @@
 import Header from "./Header";
 import Footer from "./Footer";
-import "../pages/styles/AppShell.css";
+import "../styles/AppShell.css";
 
 export default function AppShell({ children, onLogout }) {
   return (

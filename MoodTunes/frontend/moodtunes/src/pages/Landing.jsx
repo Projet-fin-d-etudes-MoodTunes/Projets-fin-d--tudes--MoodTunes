@@ -4,7 +4,7 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { AuthContext } from "../AuthContext";
 import TextType from "../components/TextType";
 import { gsap } from "gsap";
-import "./styles/Landing.css";
+import "../styles/Landing.css";
 
 function Landing() {
   const navigate = useNavigate();

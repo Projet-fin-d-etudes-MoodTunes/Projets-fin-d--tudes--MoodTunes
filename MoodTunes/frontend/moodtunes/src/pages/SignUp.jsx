@@ -1,7 +1,7 @@
 import { useState, useContext } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { AuthContext } from "../AuthContext";
-import "./styles/Auth.css";
+import "../styles/Auth.css";
 
 /**
  * Genres principaux seulement.

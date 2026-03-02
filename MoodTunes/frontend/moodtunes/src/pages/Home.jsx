@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../AuthContext";
 import AppShell from "../components/AppShell";
 import FloatingLines from "../components/FloatingLines";
-import "./styles/Home.css";
+import "../styles/Home.css";
 
 // THEME DE BASE
 const BASE_GRADIENT = ["#363742", "#7160a5", "#457287"];

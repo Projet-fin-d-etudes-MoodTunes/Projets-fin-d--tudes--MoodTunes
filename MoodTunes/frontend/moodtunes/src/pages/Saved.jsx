@@ -2,7 +2,7 @@ import { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import { AuthContext } from "../AuthContext";
-import "./styles/Saved.css";
+import "../styles/Saved.css";
 
 export default function Saved() {
   const { user, setUser } = useContext(AuthContext);

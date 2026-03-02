@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import "../pages/styles/AppShell.css";
+import "../styles/AppShell.css";
 
 export default function DrawerMenu({ open, onClose, onLogout }) {
   const navigate = useNavigate();

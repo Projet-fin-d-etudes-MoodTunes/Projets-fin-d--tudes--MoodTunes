@@ -1,6 +1,6 @@
 import { useState } from "react";
 import DrawerMenu from "./DrawerMenu";
-import "../pages/styles/AppShell.css";
+import "../styles/AppShell.css";
 
 export default function Header({ onLogout }) {
   const [open, setOpen] = useState(false);

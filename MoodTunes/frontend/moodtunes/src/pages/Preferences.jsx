@@ -2,7 +2,7 @@ import { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../AuthContext";
 import AppShell from "../components/AppShell";
-import "./styles/Preferences.css";
+import "../styles/Preferences.css";
 
 const GENRES = [
   { id: "pop", label: "Pop", includes: ["Indie Pop", "Dance Pop"] },

@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { FaGithub, FaLinkedin } from "react-icons/fa";
-import "../pages/styles/AppShell.css";
+import "../styles/AppShell.css";
 
 export default function Footer() {
   const navigate = useNavigate();
