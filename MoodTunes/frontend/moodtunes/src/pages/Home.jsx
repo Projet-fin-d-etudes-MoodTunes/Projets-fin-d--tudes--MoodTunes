@@ -320,7 +320,7 @@ export default function Home() {
                     className="vote-btn dislike"
                     onClick={() => handleVote(false)}
                   >
-                    J’aime pas
+                    Je n'aime pas
                   </button>
                 </div>
              </div>
