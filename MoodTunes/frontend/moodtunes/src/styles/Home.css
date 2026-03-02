@@ -109,6 +109,11 @@
     border-color 300ms ease;
 }
 
+.emotion-card:hover{
+  transform: translateY(-10px);
+}
+
+
 
 /* Interaction */
 .emotion-card:active {
