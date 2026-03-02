@@ -3,7 +3,6 @@ import Landing from "./pages/Landing";
 import SignUp from "./pages/SignUp";
 import SignIn from "./pages/SignIn";
 import Home from "./pages/Home";
-import About from "./pages/About";
 import Saved from "./pages/Saved";
 import Preferences from "./pages/Preferences";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -23,9 +22,7 @@ export default function App() {
           </ProtectedRoute>
         }
       />
-
-
-      <Route path="/about" element={<About />} />
+      
       <Route path="/saved" element={<Saved />} />
       <Route path="/preferences" element={<Preferences />} />
     </Routes>

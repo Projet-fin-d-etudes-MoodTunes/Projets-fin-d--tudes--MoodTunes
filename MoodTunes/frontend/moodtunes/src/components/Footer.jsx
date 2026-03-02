@@ -13,8 +13,8 @@ export default function Footer() {
   return (
     <footer className="app-footer">
       <div className="footer-left">
-        <a href="/about" className="footer-link" onClick={(e) => go(e, "/about")}>
-          À propos
+        <a href="/home" className="footer-link" onClick={(e) => go(e, "/home")}>
+          Accueil
         </a>
 
         <a href="/saved" className="footer-link" onClick={(e) => go(e, "/saved")}>

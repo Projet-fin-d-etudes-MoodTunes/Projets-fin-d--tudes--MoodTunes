@@ -18,8 +18,8 @@ export default function DrawerMenu({ open, onClose, onLogout }) {
         </button>
 
         <nav className="drawer-nav">
-          <a href="/about" className="drawer-item" onClick={(e) => go(e, "/about")}>
-            À propos
+          <a href="/home" className="drawer-item" onClick={(e) => go(e, "/home")}>
+            Accueil
           </a>
 
           <a href="/saved" className="drawer-item" onClick={(e) => go(e, "/saved")}>
