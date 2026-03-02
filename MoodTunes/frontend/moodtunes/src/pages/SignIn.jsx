@@ -93,10 +93,18 @@ function SignIn() {
           </button>
         </div>
 
-        <div className="auth-footer">
-          <Link className="auth-link" to="/">← Accueil</Link>
-          <span className="auth-sep">•</span>
-          <Link className="auth-link" to="/signup">Créer un compte</Link>
+        <div className="auth-alt-actions">
+          <button
+            type="button"
+            className="auth-secondary"
+            onClick={() => navigate("/signup")}
+          >
+            Créer un compte
+          </button>
+
+          <Link className="auth-back" to="/">
+            ← Retour à l’accueil
+          </Link>
         </div>
       </div>
     </div>

@@ -158,13 +158,17 @@ function SignUp() {
           </button>
         </div>
 
-        <div className="auth-footer">
-          <Link className="auth-link" to="/">
-            ← Retour à l’accueil
-          </Link>
-          <span className="auth-sep">•</span>
-          <Link className="auth-link" to="/signin">
+        <div className="auth-alt-actions">
+          <button
+            type="button"
+            className="auth-secondary"
+            onClick={() => navigate("/signin")}
+          >
             J’ai déjà un compte
+          </button>
+
+          <Link className="auth-back" to="/">
+            ← Retour à l’accueil
           </Link>
         </div>
       </div>

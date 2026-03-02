@@ -124,11 +124,11 @@
   position: fixed;
   inset: 0;
   z-index: 9999;
-  visibility: hidden;
+  pointer-events: none;
 }
 
 .drawer-open {
-  visibility: visible;
+  pointer-events: auto;
 }
 
 /* Backdrop derrière le panel */
@@ -139,6 +139,12 @@
   background: rgba(0,0,0,0.35);
   cursor: pointer;
   z-index: 0;
+  opacity: 0;
+  transition: opacity 260ms ease;
+}
+
+.drawer-open .drawer-backdrop {
+  opacity: 1;
 }
 
 /* Panel */
@@ -182,23 +188,26 @@
 
 /* Navigation */
 .drawer-nav {
-  margin-top: 90px;
+  margin-top: 120px;
   display: flex;
   flex-direction: column;
   gap: 22px;
+}
+
+.drawer-logout {
+  margin-top: 40px;
+
 }
 
 /* Normalisation lien + bouton */
 .drawer-item {
   display: block;
   width: 100%;
-
   font-size: 2rem;
   font-weight: 900;
   font-family: "Titles";
   color: #fff;
   text-decoration: none;
-
   background: none;
   border: 0;
   padding: 0;
