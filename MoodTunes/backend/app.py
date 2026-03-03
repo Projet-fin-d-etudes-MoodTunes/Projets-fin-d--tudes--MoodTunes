@@ -276,7 +276,19 @@ def recommend():
             "embed_url": chosen["embed_url"]
         })
 
-    model = joblib.load(model_path)
+    try:
+        model = joblib.load(model_path)
+    except Exception:
+        logger.warning("Model load failed for user_id=%s. Falling back to random recommendation.", user_id)
+        chosen = random.choice(candidates)
+        db.close()
+        return jsonify({
+            "track_id": chosen["id"],
+            "spotify_id": chosen["spotify_id"],
+            "name": chosen["name"],
+            "artist": chosen["artist"],
+            "embed_url": chosen["embed_url"]
+        })
 
     FEATURE_COLUMNS = [
         "energy",
@@ -289,8 +301,25 @@ def recommend():
         "loudness"
     ]
 
-    # Construire DataFrame candidats
-    df_candidates = pd.DataFrame(candidates)
+    # Construire DataFrame candidats depuis sqlite3.Row
+    df_candidates = pd.DataFrame([dict(row) for row in candidates])
+
+    missing_features = [col for col in FEATURE_COLUMNS if col not in df_candidates.columns]
+    if missing_features:
+        logger.warning(
+            "Missing feature columns for user_id=%s: %s. Falling back to random recommendation.",
+            user_id,
+            ",".join(missing_features),
+        )
+        chosen = random.choice(candidates)
+        db.close()
+        return jsonify({
+            "track_id": chosen["id"],
+            "spotify_id": chosen["spotify_id"],
+            "name": chosen["name"],
+            "artist": chosen["artist"],
+            "embed_url": chosen["embed_url"]
+        })
 
     # Supprimer lignes invalides
     df_candidates = df_candidates.dropna(subset=FEATURE_COLUMNS)
