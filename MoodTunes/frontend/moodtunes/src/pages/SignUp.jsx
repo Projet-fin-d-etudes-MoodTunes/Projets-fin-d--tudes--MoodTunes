@@ -24,8 +24,9 @@ function SignUp() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const { setUser } = useContext(AuthContext);
+  const { setUser, setToken } = useContext(AuthContext);
   const navigate = useNavigate();
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
   const handleGenreChange = (genreId) => {
     setSelectedGenres((prev) =>
@@ -51,7 +52,7 @@ function SignUp() {
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:5000/signup", {
+      const response = await fetch(`${API_BASE}/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -67,21 +68,19 @@ function SignUp() {
         setError(data?.error || "Erreur lors de la création du compte");
         return;
       }
+      if (!data?.token) {
+        setError("Token manquant dans la reponse serveur");
+        return;
+      }
 
       setUser({
         id: data.id,
         username: data.username,
         genres: data.genres,
       });
+      setToken(data.token);
 
-      localStorage.setItem(
-        "user",
-        JSON.stringify({
-          id: data.id,
-          username: data.username,
-          genres: data.genres,
-        })
-      );
+      localStorage.setItem("token", data.token);
 
       navigate("/home");
     } catch {

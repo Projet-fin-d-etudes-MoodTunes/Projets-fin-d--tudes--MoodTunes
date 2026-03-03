@@ -108,8 +108,9 @@ const EMOTIONS = [
 ];
 
 export default function Home() {
-  const { user, setUser } = useContext(AuthContext);
+  const { user, setUser, token, setToken } = useContext(AuthContext);
   const navigate = useNavigate();
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
   const [screen, setScreen] = useState("choose");
   const [emotionId, setEmotionId] = useState("base");
@@ -138,16 +139,13 @@ export default function Home() {
 
   const handleChooseEmotion = async (id) => {
     try {
-      console.log("USER:", user);
-      console.log("Sending:", {
-        user_id: user?.id,
-        emotion: id,
-      });
-      const response = await fetch("http://localhost:5000/recommend", {
+      const response = await fetch(`${API_BASE}/recommend`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({
-          user_id: user.id,
           emotion: id,
         }),
       });
@@ -174,11 +172,13 @@ export default function Home() {
     }
 
     try {
-      await fetch("http://localhost:5000/vote", {
+      await fetch(`${API_BASE}/vote`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({
-          user_id: user.id,
           track_id: currentTrack.track_id,
           emotion: emotionId,
           liked: liked ? 1 : 0,
@@ -195,7 +195,8 @@ export default function Home() {
 
   const handleLogout = () => {
     setUser(null);
-    localStorage.removeItem("user");
+    setToken(null);
+    localStorage.removeItem("token");
     navigate("/");
   };
 
@@ -257,8 +258,8 @@ export default function Home() {
         >
           {screen === "choose" ? (
             <>
-              <h1>Bienvenue {user?.username} 🎧</h1>
-              <h2>Quelle émotion sens-tu aujourd’hui ?</h2>
+              <h1>Quelle émotion sens-tu aujourd’hui ?</h1>
+              <h2>Bienvenue {user?.username} 🎧</h2>
               <p>Choisis une émotion pour adapter l’ambiance.</p>
 
               <div className="emotion-grid">

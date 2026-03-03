@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, redirect
+from flask import Flask, request, jsonify, redirect, g
 from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
 import json
@@ -7,12 +7,16 @@ import requests
 import base64
 import sqlite3
 import logging
+import time
+import hmac
+import hashlib
 from dotenv import load_dotenv
 from train_model import train_model_for_user
 from database import get_db
 import random
 import joblib
 import pandas as pd
+from functools import wraps
 
 load_dotenv()
 
@@ -27,6 +31,11 @@ logger = logging.getLogger(__name__)
 SPOTIFY_CLIENT_ID = os.getenv("SPOTIFY_CLIENT_ID")
 SPOTIFY_CLIENT_SECRET = os.getenv("SPOTIFY_CLIENT_SECRET")
 SPOTIFY_REDIRECT_URI = os.getenv("SPOTIFY_REDIRECT_URI")
+JWT_SECRET = os.getenv("JWT_SECRET", "change-me-in-production")
+JWT_EXP_SECONDS = int(os.getenv("JWT_EXP_SECONDS", str(7 * 24 * 60 * 60)))
+
+if JWT_SECRET == "change-me-in-production":
+    logger.warning("JWT_SECRET is using the default value. Set JWT_SECRET in environment for deployment.")
 
 MODEL_DIR = os.path.join(os.path.dirname(__file__), "models")
 os.makedirs(MODEL_DIR, exist_ok=True)
@@ -34,6 +43,74 @@ os.makedirs(MODEL_DIR, exist_ok=True)
 
 def get_model_path(user_id):
     return os.path.join(MODEL_DIR, f"user_model_{user_id}.pkl")
+
+
+def _b64url_encode(data_bytes):
+    return base64.urlsafe_b64encode(data_bytes).rstrip(b"=").decode("utf-8")
+
+
+def _b64url_decode(data):
+    padding = "=" * (-len(data) % 4)
+    return base64.urlsafe_b64decode(data + padding)
+
+
+def create_jwt(user_id):
+    header = {"alg": "HS256", "typ": "JWT"}
+    now = int(time.time())
+    payload = {"sub": int(user_id), "iat": now, "exp": now + JWT_EXP_SECONDS}
+
+    header_b64 = _b64url_encode(json.dumps(header, separators=(",", ":")).encode("utf-8"))
+    payload_b64 = _b64url_encode(json.dumps(payload, separators=(",", ":")).encode("utf-8"))
+    signing_input = f"{header_b64}.{payload_b64}".encode("utf-8")
+    signature = hmac.new(JWT_SECRET.encode("utf-8"), signing_input, hashlib.sha256).digest()
+    signature_b64 = _b64url_encode(signature)
+    return f"{header_b64}.{payload_b64}.{signature_b64}"
+
+
+def decode_jwt(token):
+    try:
+        header_b64, payload_b64, signature_b64 = token.split(".")
+        signing_input = f"{header_b64}.{payload_b64}".encode("utf-8")
+        expected_signature = hmac.new(JWT_SECRET.encode("utf-8"), signing_input, hashlib.sha256).digest()
+        actual_signature = _b64url_decode(signature_b64)
+
+        if not hmac.compare_digest(expected_signature, actual_signature):
+            raise ValueError("Invalid signature")
+
+        payload = json.loads(_b64url_decode(payload_b64).decode("utf-8"))
+        exp = payload.get("exp")
+        sub = payload.get("sub")
+
+        if not isinstance(sub, int):
+            raise ValueError("Invalid subject")
+        if not isinstance(exp, int) or exp < int(time.time()):
+            raise ValueError("Token expired")
+
+        return payload
+    except Exception as exc:
+        raise ValueError("Invalid token") from exc
+
+
+def require_auth(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        auth_header = request.headers.get("Authorization", "")
+        if not auth_header.startswith("Bearer "):
+            return jsonify({"error": "Missing token"}), 401
+
+        token = auth_header.split(" ", 1)[1].strip()
+        if not token:
+            return jsonify({"error": "Missing token"}), 401
+
+        try:
+            payload = decode_jwt(token)
+            g.auth_user_id = int(payload["sub"])
+        except ValueError:
+            return jsonify({"error": "Invalid token"}), 401
+
+        return fn(*args, **kwargs)
+
+    return wrapper
 
 
 # ===============================
@@ -100,7 +177,7 @@ def spotify_callback():
 # ===============================
 @app.route("/signup", methods=["POST"])
 def signup():
-    data = request.json
+    data = request.json or {}
     username = data.get("username")
     password = data.get("password")
     genres = data.get("genres", [])
@@ -129,7 +206,8 @@ def signup():
     finally:
         db.close()
 
-    return jsonify({"id": user_id, "username": username, "genres": genres}), 201
+    token = create_jwt(user_id)
+    return jsonify({"id": user_id, "username": username, "genres": genres, "token": token}), 201
 
 
 # ===============================
@@ -137,7 +215,7 @@ def signup():
 # ===============================
 @app.route("/login", methods=["POST"])
 def login():
-    data = request.json
+    data = request.json or {}
     username = data.get("username")
     password = data.get("password")
 
@@ -154,10 +232,13 @@ def login():
     if not check_password_hash(user["password"], password):
         return jsonify({"error": "Mot de passe incorrect"}), 401
 
+    token = create_jwt(user["id"])
+
     return jsonify({
         "id": user["id"],
         "username": user["username"],
-        "genres": json.loads(user["genres"])
+        "genres": json.loads(user["genres"]),
+        "token": token
     })
 
 # ===============================
@@ -166,9 +247,10 @@ def login():
 
 
 @app.route("/recommend", methods=["POST"])
+@require_auth
 def recommend():
-    data = request.json
-    user_id = data.get("user_id")
+    data = request.json or {}
+    user_id = g.auth_user_id
     emotion = data.get("emotion")
 
     if not user_id or not emotion:
@@ -368,21 +450,21 @@ def recommend():
 
 
 @app.route("/vote", methods=["POST"])
+@require_auth
 def vote():
-    data = request.json
+    data = request.json or {}
 
-    user_id = data.get("user_id")
+    user_id = g.auth_user_id
     track_id = data.get("track_id")
     emotion = data.get("emotion")
     liked = data.get("liked")
 
-    if user_id is None or track_id is None or emotion is None or liked is None:
+    if track_id is None or emotion is None or liked is None:
         return jsonify({"error": "Missing data"}), 400
     try:
-        user_id = int(user_id)
         track_id = int(track_id)
     except (TypeError, ValueError):
-        return jsonify({"error": "Invalid user_id or track_id"}), 400
+        return jsonify({"error": "Invalid track_id"}), 400
 
     db = get_db()
     cursor = db.cursor()
@@ -418,7 +500,11 @@ def vote():
 # Musiques sauvegardées
 # ===============================
 @app.route("/saved/<int:user_id>", methods=["GET"])
+@require_auth
 def get_saved_tracks(user_id):
+    if g.auth_user_id != user_id:
+        return jsonify({"error": "Forbidden"}), 403
+
     db = get_db()
     cursor = db.cursor()
 
@@ -457,17 +543,14 @@ def get_saved_tracks(user_id):
 # Update user preferences
 # ===============================
 @app.route("/preferences", methods=["PUT"])
+@require_auth
 def update_preferences():
-    data = request.json
-    user_id = data.get("user_id")
+    data = request.json or {}
+    user_id = g.auth_user_id
     genres = data.get("genres")
 
-    if not user_id or not genres:
+    if not genres:
         return jsonify({"error": "Missing data"}), 400
-    try:
-        user_id = int(user_id)
-    except (TypeError, ValueError):
-        return jsonify({"error": "Invalid user_id"}), 400
 
     db = get_db()
     cursor = db.cursor()

@@ -9,15 +9,16 @@ function SignIn() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const { setUser } = useContext(AuthContext);
+  const { setUser, setToken } = useContext(AuthContext);
   const navigate = useNavigate();
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
   const handleLogin = async () => {
     setError("");
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:5000/login", {
+      const response = await fetch(`${API_BASE}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
@@ -29,20 +30,19 @@ function SignIn() {
         setError(data?.error || "Erreur de connexion");
         return;
       }
+      if (!data?.token) {
+        setError("Token manquant dans la reponse serveur");
+        return;
+      }
 
       setUser({
         id: data.id,
         username: data.username,
         genres: data.genres,
       });
+      setToken(data.token);
 
-      localStorage.setItem(
-        "user",
-        JSON.stringify({ id: data.id, 
-                          username: data.username, 
-                          genres: data.genres 
-                        })
-      );
+      localStorage.setItem("token", data.token);
 
       navigate("/home");
     } catch {

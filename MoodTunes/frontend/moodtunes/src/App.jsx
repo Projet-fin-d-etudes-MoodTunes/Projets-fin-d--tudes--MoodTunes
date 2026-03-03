@@ -23,8 +23,22 @@ export default function App() {
         }
       />
       
-      <Route path="/saved" element={<Saved />} />
-      <Route path="/preferences" element={<Preferences />} />
+      <Route
+        path="/saved"
+        element={
+          <ProtectedRoute>
+            <Saved />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/preferences"
+        element={
+          <ProtectedRoute>
+            <Preferences />
+          </ProtectedRoute>
+        }
+      />
     </Routes>
   );
 }

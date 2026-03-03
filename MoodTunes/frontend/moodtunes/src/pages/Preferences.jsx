@@ -14,8 +14,9 @@ const GENRES = [
 ];
 
 export default function Preferences() {
-  const { user, setUser } = useContext(AuthContext);
+  const { user, setUser, token, setToken } = useContext(AuthContext);
   const navigate = useNavigate();
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
   const [selectedGenres, setSelectedGenres] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -45,11 +46,13 @@ export default function Preferences() {
     setMessage("");
 
     try {
-      const response = await fetch("http://localhost:5000/preferences", {
+      const response = await fetch(`${API_BASE}/preferences`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({
-          user_id: user.id,
           genres: selectedGenres,
         }),
       });
@@ -79,7 +82,8 @@ export default function Preferences() {
 
   const handleLogout = () => {
     setUser(null);
-    localStorage.removeItem("user");
+    setToken(null);
+    localStorage.removeItem("token");
     navigate("/");
   };
 

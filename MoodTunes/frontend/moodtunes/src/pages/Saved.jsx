@@ -5,21 +5,27 @@ import { AuthContext } from "../AuthContext";
 import "../styles/Saved.css";
 
 export default function Saved() {
-  const { user, setUser } = useContext(AuthContext);
+  const { user, setUser, token, setToken } = useContext(AuthContext);
   const navigate = useNavigate();
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
   const [tracks, setTracks] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const handleLogout = () => {
     setUser(null);
-    localStorage.removeItem("user");
+    setToken(null);
+    localStorage.removeItem("token");
     navigate("/");
   };
 
   useEffect(() => {
     if (!user?.id) return;
 
-    fetch(`http://localhost:5000/saved/${user.id}`)
+    fetch(`${API_BASE}/saved/${user.id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
       .then(res => res.json())
       .then(data => {
         setTracks(data);
@@ -29,7 +35,7 @@ export default function Saved() {
         console.error("Erreur chargement saved:", err);
         setLoading(false);
       });
-  }, [user]);
+  }, [API_BASE, token, user]);
 
   return (
     <AppShell onLogout={handleLogout}>
