@@ -3,7 +3,7 @@ import os
 
 
 def get_db():
-    print("DB PATH:", os.path.abspath("users.db"))
-    conn = sqlite3.connect("users.db")
+    db_path = os.path.join(os.path.dirname(__file__), "users.db")
+    conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     return conn

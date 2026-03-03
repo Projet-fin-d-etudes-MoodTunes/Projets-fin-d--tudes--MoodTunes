@@ -27,21 +27,27 @@ def get_access_token():
         "grant_type": "client_credentials"
     }
 
-    result = requests.post(url, headers=headers, data=data)
+    result = requests.post(url, headers=headers, data=data, timeout=10)
+    result.raise_for_status()
     json_result = result.json()
     return json_result["access_token"]
 
 
 def fetch_playlist_tracks(playlist_id):
     url = f"https://api.spotify.com/v1/playlists/{playlist_id}/items?limit=100"
+    token = ACCESS_TOKEN or get_access_token()
 
     headers = {
-        "Authorization": f"Bearer {ACCESS_TOKEN}"
+        "Authorization": f"Bearer {token}"
     }
 
     tracks = []
     while url:
-        result = requests.get(url, headers=headers)
+        try:
+            result = requests.get(url, headers=headers, timeout=15)
+        except requests.RequestException as e:
+            print("Network error:", e)
+            break
         print("Status:", result.status_code)
 
         if result.status_code == 429:

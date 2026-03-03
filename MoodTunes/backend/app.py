@@ -5,6 +5,8 @@ import json
 import os
 import requests
 import base64
+import sqlite3
+import logging
 from dotenv import load_dotenv
 from train_model import train_model_for_user
 from database import get_db
@@ -15,13 +17,23 @@ import pandas as pd
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app)
+allowed_origins = os.getenv("FRONTEND_ORIGINS", "http://localhost:5173").split(",")
+allowed_origins = [origin.strip() for origin in allowed_origins if origin.strip()]
+CORS(app, resources={r"/*": {"origins": allowed_origins}})
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 SPOTIFY_CLIENT_ID = os.getenv("SPOTIFY_CLIENT_ID")
 SPOTIFY_CLIENT_SECRET = os.getenv("SPOTIFY_CLIENT_SECRET")
 SPOTIFY_REDIRECT_URI = os.getenv("SPOTIFY_REDIRECT_URI")
 
-ACCESS_TOKEN = os.getenv("SPOTIFY_TOKEN")
+MODEL_DIR = os.path.join(os.path.dirname(__file__), "models")
+os.makedirs(MODEL_DIR, exist_ok=True)
+
+
+def get_model_path(user_id):
+    return os.path.join(MODEL_DIR, f"user_model_{user_id}.pkl")
 
 
 # ===============================
@@ -47,9 +59,9 @@ def spotify_login():
 # ===============================
 @app.route("/spotify/callback")
 def spotify_callback():
-    global ACCESS_TOKEN
-
     code = request.args.get("code")
+    if not code:
+        return jsonify({"error": "Missing code"}), 400
 
     url = "https://accounts.spotify.com/api/token"
 
@@ -68,14 +80,18 @@ def spotify_callback():
         "redirect_uri": SPOTIFY_REDIRECT_URI
     }
 
-    response = requests.post(url, headers=headers, data=data)
-    json_result = response.json()
+    try:
+        response = requests.post(url, headers=headers, data=data, timeout=10)
+        response.raise_for_status()
+        json_result = response.json()
+    except requests.RequestException:
+        return jsonify({"error": "Spotify auth request failed"}), 502
 
-    ACCESS_TOKEN = json_result.get("access_token")
+    if not json_result.get("access_token"):
+        return jsonify({"error": "Spotify token missing"}), 502
 
     return jsonify({
-        "message": "Spotify connecté avec succès ✅",
-        "access_token": ACCESS_TOKEN
+        "message": "Spotify connection successful"
     })
 
 
@@ -106,8 +122,10 @@ def signup():
         )
         user_id = cursor.lastrowid
         db.commit()
-    except:
+    except sqlite3.IntegrityError:
         return jsonify({"error": "Utilisateur existe déjà"}), 400
+    except sqlite3.DatabaseError:
+        return jsonify({"error": "Database error"}), 500
     finally:
         db.close()
 
@@ -155,6 +173,10 @@ def recommend():
 
     if not user_id or not emotion:
         return jsonify({"error": "Missing data"}), 400
+    try:
+        user_id = int(user_id)
+    except (TypeError, ValueError):
+        return jsonify({"error": "Invalid user_id"}), 400
 
     db = get_db()
     cursor = db.cursor()
@@ -241,7 +263,7 @@ def recommend():
         return jsonify({"error": "Aucune musique trouvée"}), 404
 
     # Charger modèle
-    model_path = f"../user_model_{user_id}.pkl"
+    model_path = get_model_path(user_id)
 
     if not os.path.exists(model_path):
         chosen = random.choice(candidates)
@@ -297,7 +319,7 @@ def recommend():
     # Top 30
     top_n = df_candidates.head(30)
 
-    print(df_candidates[["name", "score"]].head(10))
+    logger.debug("Top candidate scores computed for user_id=%s", user_id)
 
     # Random parmi top
     chosen = top_n.sample(1).iloc[0]
@@ -327,6 +349,11 @@ def vote():
 
     if user_id is None or track_id is None or emotion is None or liked is None:
         return jsonify({"error": "Missing data"}), 400
+    try:
+        user_id = int(user_id)
+        track_id = int(track_id)
+    except (TypeError, ValueError):
+        return jsonify({"error": "Invalid user_id or track_id"}), 400
 
     db = get_db()
     cursor = db.cursor()
@@ -352,7 +379,7 @@ def vote():
 
     # Retrain batch de 10
     if total % 10 == 0 and total >= 20:
-        print(f"🔁 Retraining model for user {user_id} (total={total})")
+        logger.info("Retraining model for user %s (total=%s)", user_id, total)
         train_model_for_user(user_id)
 
     return jsonify({"message": "Vote saved"})
@@ -408,6 +435,10 @@ def update_preferences():
 
     if not user_id or not genres:
         return jsonify({"error": "Missing data"}), 400
+    try:
+        user_id = int(user_id)
+    except (TypeError, ValueError):
+        return jsonify({"error": "Invalid user_id"}), 400
 
     db = get_db()
     cursor = db.cursor()
@@ -428,4 +459,7 @@ def update_preferences():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    flask_debug = os.getenv("FLASK_DEBUG", "0").lower() in ("1", "true", "yes")
+    app.run(debug=flask_debug)
+
+

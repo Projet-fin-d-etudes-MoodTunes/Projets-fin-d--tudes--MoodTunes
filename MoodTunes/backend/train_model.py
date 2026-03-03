@@ -8,6 +8,7 @@ from sklearn.pipeline import Pipeline
 import joblib
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 
 FEATURE_COLUMNS = [
     "energy",
@@ -19,6 +20,9 @@ FEATURE_COLUMNS = [
     "tempo",
     "loudness"
 ]
+
+MODEL_DIR = os.path.join(os.path.dirname(__file__), "models")
+os.makedirs(MODEL_DIR, exist_ok=True)
 
 
 def load_user_dataset(user_id):
@@ -87,7 +91,8 @@ def train_model_for_user(user_id):
         print(f"{feature}: {coef:.3f}")
 
     # Sauvegarder pipeline complet
-    joblib.dump(pipeline, f"user_model_{user_id}.pkl")
+    model_path = os.path.join(MODEL_DIR, f"user_model_{user_id}.pkl")
+    joblib.dump(pipeline, model_path)
 
     print(f"\n✅ Modèle sauvegardé pour utilisateur {user_id}")
 

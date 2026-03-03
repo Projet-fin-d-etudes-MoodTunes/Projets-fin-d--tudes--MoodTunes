@@ -38,6 +38,10 @@ CREATE TABLE IF NOT EXISTS user_history (
 )
 """)
 
+cursor.execute("CREATE INDEX IF NOT EXISTS idx_tracks_emotion_genre ON tracks(emotion, genre)")
+cursor.execute("CREATE INDEX IF NOT EXISTS idx_user_history_user_id ON user_history(user_id)")
+cursor.execute("CREATE INDEX IF NOT EXISTS idx_user_history_user_liked ON user_history(user_id, liked)")
+
 db.commit()
 db.close()
 
