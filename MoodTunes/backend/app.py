@@ -21,8 +21,10 @@ from functools import wraps
 load_dotenv()
 
 app = Flask(__name__)
-allowed_origins = os.getenv("FRONTEND_ORIGINS", "http://localhost:5173").split(",")
-allowed_origins = [origin.strip() for origin in allowed_origins if origin.strip()]
+allowed_origins = os.getenv(
+    "FRONTEND_ORIGINS", "http://localhost:5173").split(",")
+allowed_origins = [origin.strip()
+                   for origin in allowed_origins if origin.strip()]
 CORS(app, resources={r"/*": {"origins": allowed_origins}})
 
 logging.basicConfig(level=logging.INFO)
@@ -35,7 +37,8 @@ JWT_SECRET = os.getenv("JWT_SECRET", "change-me-in-production")
 JWT_EXP_SECONDS = int(os.getenv("JWT_EXP_SECONDS", str(7 * 24 * 60 * 60)))
 
 if JWT_SECRET == "change-me-in-production":
-    logger.warning("JWT_SECRET is using the default value. Set JWT_SECRET in environment for deployment.")
+    logger.warning(
+        "JWT_SECRET is using the default value. Set JWT_SECRET in environment for deployment.")
 
 MODEL_DIR = os.path.join(os.path.dirname(__file__), "models")
 os.makedirs(MODEL_DIR, exist_ok=True)
@@ -59,10 +62,13 @@ def create_jwt(user_id):
     now = int(time.time())
     payload = {"sub": int(user_id), "iat": now, "exp": now + JWT_EXP_SECONDS}
 
-    header_b64 = _b64url_encode(json.dumps(header, separators=(",", ":")).encode("utf-8"))
-    payload_b64 = _b64url_encode(json.dumps(payload, separators=(",", ":")).encode("utf-8"))
+    header_b64 = _b64url_encode(json.dumps(
+        header, separators=(",", ":")).encode("utf-8"))
+    payload_b64 = _b64url_encode(json.dumps(
+        payload, separators=(",", ":")).encode("utf-8"))
     signing_input = f"{header_b64}.{payload_b64}".encode("utf-8")
-    signature = hmac.new(JWT_SECRET.encode("utf-8"), signing_input, hashlib.sha256).digest()
+    signature = hmac.new(JWT_SECRET.encode("utf-8"),
+                         signing_input, hashlib.sha256).digest()
     signature_b64 = _b64url_encode(signature)
     return f"{header_b64}.{payload_b64}.{signature_b64}"
 
@@ -71,7 +77,8 @@ def decode_jwt(token):
     try:
         header_b64, payload_b64, signature_b64 = token.split(".")
         signing_input = f"{header_b64}.{payload_b64}".encode("utf-8")
-        expected_signature = hmac.new(JWT_SECRET.encode("utf-8"), signing_input, hashlib.sha256).digest()
+        expected_signature = hmac.new(JWT_SECRET.encode(
+            "utf-8"), signing_input, hashlib.sha256).digest()
         actual_signature = _b64url_decode(signature_b64)
 
         if not hmac.compare_digest(expected_signature, actual_signature):
@@ -361,7 +368,8 @@ def recommend():
     try:
         model = joblib.load(model_path)
     except Exception:
-        logger.warning("Model load failed for user_id=%s. Falling back to random recommendation.", user_id)
+        logger.warning(
+            "Model load failed for user_id=%s. Falling back to random recommendation.", user_id)
         chosen = random.choice(candidates)
         db.close()
         return jsonify({
@@ -386,7 +394,8 @@ def recommend():
     # Construire DataFrame candidats depuis sqlite3.Row
     df_candidates = pd.DataFrame([dict(row) for row in candidates])
 
-    missing_features = [col for col in FEATURE_COLUMNS if col not in df_candidates.columns]
+    missing_features = [
+        col for col in FEATURE_COLUMNS if col not in df_candidates.columns]
     if missing_features:
         logger.warning(
             "Missing feature columns for user_id=%s: %s. Falling back to random recommendation.",
@@ -572,6 +581,5 @@ def update_preferences():
 
 if __name__ == "__main__":
     flask_debug = os.getenv("FLASK_DEBUG", "0").lower() in ("1", "true", "yes")
-    app.run(debug=flask_debug)
-
-
+    port = int(os.getenv("PORT", "5000"))
+    app.run(host="0.0.0.0", port=port, debug=flask_debug)
