@@ -42,7 +42,7 @@ function Landing() {
     }, 4000);
 
     return () => clearInterval(interval);
-  }, [hovered]);
+  }, [hovered, colors.length]);
 
   useEffect(() => {
     if (user) navigate("/home");
