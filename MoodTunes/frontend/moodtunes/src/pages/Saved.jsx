@@ -7,7 +7,7 @@ import "../styles/Saved.css";
 export default function Saved() {
   const { user, setUser, token, setToken } = useContext(AuthContext);
   const navigate = useNavigate();
-  const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+  const API_BASE = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000";
   const [tracks, setTracks] = useState([]);
   const [loading, setLoading] = useState(true);
 
