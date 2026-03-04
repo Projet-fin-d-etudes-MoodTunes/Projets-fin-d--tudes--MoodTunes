@@ -110,6 +110,7 @@ const EMOTIONS = [
 export default function Home() {
   const { user, setUser, token, setToken } = useContext(AuthContext);
   const navigate = useNavigate();
+  // URL backend en prod, fallback localhost en dev
   const API_BASE = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000";
 
   const [screen, setScreen] = useState("choose");
@@ -130,6 +131,7 @@ export default function Home() {
   }, []);
 
   const goToScreen = useCallback((nextScreen) => {
+    // Petite transition visuelle entre les deux ecrans
     setTransitioning(true);
     window.setTimeout(() => {
       setScreen(nextScreen);
@@ -139,6 +141,7 @@ export default function Home() {
 
   const handleChooseEmotion = async (id) => {
     try {
+      // Route protegee: on envoie le JWT dans Authorization
       const response = await fetch(`${API_BASE}/recommend`, {
         method: "POST",
         headers: {
@@ -146,6 +149,7 @@ export default function Home() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
+          // L'id user n'est plus envoye: backend le lit dans le token
           emotion: id,
         }),
       });
@@ -172,6 +176,7 @@ export default function Home() {
     }
 
     try {
+      // Vote protege avec le JWT
       await fetch(`${API_BASE}/vote`, {
         method: "POST",
         headers: {
@@ -181,6 +186,7 @@ export default function Home() {
         body: JSON.stringify({
           track_id: currentTrack.track_id,
           emotion: emotionId,
+          // Conversion booleen => 1/0 pour rester compatible SQL
           liked: liked ? 1 : 0,
         }),
       });
@@ -194,6 +200,7 @@ export default function Home() {
   };
 
   const handleLogout = () => {
+    // Reset session locale
     setUser(null);
     setToken(null);
     localStorage.removeItem("token");

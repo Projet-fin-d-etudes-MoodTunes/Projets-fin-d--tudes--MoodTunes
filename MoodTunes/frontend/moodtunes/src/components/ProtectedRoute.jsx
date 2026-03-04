@@ -5,6 +5,7 @@ import { AuthContext } from "../AuthContext";
 function ProtectedRoute({ children }) {
   const { user, token } = useContext(AuthContext);
 
+  // Si pas connecte, on renvoie vers la landing
   if (!user || !token) {
     return <Navigate to="/" />;
   }

@@ -7,11 +7,13 @@ import "../styles/Saved.css";
 export default function Saved() {
   const { user, setUser, token, setToken } = useContext(AuthContext);
   const navigate = useNavigate();
+  // URL backend en prod, fallback localhost en dev
   const API_BASE = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000";
   const [tracks, setTracks] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const handleLogout = () => {
+    // Deconnexion locale
     setUser(null);
     setToken(null);
     localStorage.removeItem("token");
@@ -21,6 +23,7 @@ export default function Saved() {
   useEffect(() => {
     if (!user?.id) return;
 
+    // Route protegee: token obligatoire
     fetch(`${API_BASE}/saved/${user.id}`, {
       headers: {
         Authorization: `Bearer ${token}`,

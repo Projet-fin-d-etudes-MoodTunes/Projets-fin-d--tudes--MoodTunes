@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 
+# Colonnes utilisees pour l'entrainement et le scoring ML
 FEATURE_COLUMNS = [
     "energy",
     "valence",
@@ -26,6 +27,7 @@ os.makedirs(MODEL_DIR, exist_ok=True)
 
 
 def load_user_dataset(user_id):
+    # On charge uniquement l'historique du user + features valides
     db = get_db()
 
     query = f"""
@@ -58,15 +60,19 @@ def load_user_dataset(user_id):
 
 
 def train_model_for_user(user_id):
+    # Etape 1: charger les exemples likes/dislikes du user
     df = load_user_dataset(user_id)
 
+    # En dessous de 20 exemples, le modele est trop instable
     if len(df) < 20:
         print("⚠ Pas assez de données.")
         return None
 
+    # X = features audio, y = cible like/dislike
     X = df[FEATURE_COLUMNS]
     y = df["liked"]
 
+    # Split train/test pour mesurer rapidement la qualite
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=42
     )
@@ -91,6 +97,7 @@ def train_model_for_user(user_id):
         print(f"{feature}: {coef:.3f}")
 
     # Sauvegarder pipeline complet
+    # On sauvegarde scaler + modele pour pouvoir predict direct ensuite
     model_path = os.path.join(MODEL_DIR, f"user_model_{user_id}.pkl")
     joblib.dump(pipeline, model_path)
 

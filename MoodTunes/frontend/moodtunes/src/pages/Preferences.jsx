@@ -16,6 +16,7 @@ const GENRES = [
 export default function Preferences() {
   const { user, setUser, token, setToken } = useContext(AuthContext);
   const navigate = useNavigate();
+  // URL backend en prod, fallback localhost en dev
   const API_BASE = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000";
 
   const [selectedGenres, setSelectedGenres] = useState([]);
@@ -29,6 +30,7 @@ export default function Preferences() {
   }, [user]);
 
   const handleGenreChange = (genreId) => {
+    // Toggle du genre dans la liste selectionnee
     setSelectedGenres((prev) =>
       prev.includes(genreId)
         ? prev.filter((g) => g !== genreId)
@@ -46,6 +48,7 @@ export default function Preferences() {
     setMessage("");
 
     try {
+      // Route protegee: token obligatoire
       const response = await fetch(`${API_BASE}/preferences`, {
         method: "PUT",
         headers: {
@@ -66,6 +69,7 @@ export default function Preferences() {
 
       const updatedUser = {
         ...user,
+        // On met aussi a jour le user local pour afficher direct les nouvelles prefs
         genres: selectedGenres,
       };
 
@@ -81,6 +85,7 @@ export default function Preferences() {
   };
 
   const handleLogout = () => {
+    // Deconnexion locale
     setUser(null);
     setToken(null);
     localStorage.removeItem("token");

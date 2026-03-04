@@ -11,9 +11,11 @@ function SignIn() {
 
   const { setUser, setToken } = useContext(AuthContext);
   const navigate = useNavigate();
+  // URL backend en prod, fallback localhost en dev
   const API_BASE = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000";
 
   const handleLogin = async () => {
+    // Reset UI avant appel API
     setError("");
     setLoading(true);
 
@@ -30,11 +32,13 @@ function SignIn() {
         setError(data?.error || "Erreur de connexion");
         return;
       }
+      // Si backend ne renvoie pas de token, on bloque
       if (!data?.token) {
         setError("Token manquant dans la reponse serveur");
         return;
       }
 
+      // On stocke user + token dans le contexte
       setUser({
         id: data.id,
         username: data.username,

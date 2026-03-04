@@ -3,6 +3,7 @@ import requests
 import time
 
 BASE_URL = "https://api.reccobeats.com/v1"
+# Pause entre deux tracks pour rester gentil avec l'API
 DELAY_SECONDS = 1
 
 
@@ -10,6 +11,7 @@ DELAY_SECONDS = 1
 # Obtenir le Reccobeats ID depuis Spotify ID
 # ==========================================
 def get_reccobeats_id(spotify_id):
+    # Etape 1: mapping Spotify ID -> Reccobeats ID
     url = f"{BASE_URL}/track?ids={spotify_id}"
 
     try:
@@ -41,6 +43,7 @@ def get_reccobeats_id(spotify_id):
 # Récupérer audio features via Recco ID
 # ==========================================
 def fetch_audio_features(recco_id):
+    # Etape 2: recuperation des features audio via l'id Reccobeats
     url = f"{BASE_URL}/track/{recco_id}/audio-features"
 
     try:
@@ -67,6 +70,7 @@ def fetch_audio_features(recco_id):
 # Update base de données
 # ==========================================
 def update_track(track_id, features):
+    # Sauvegarde des features dans la table tracks
     db = get_db()
     cursor = db.cursor()
 
@@ -101,6 +105,7 @@ def update_track(track_id, features):
 # Script principal
 # ==========================================
 def main():
+    # On traite uniquement les tracks qui n'ont pas encore de feature
     db = get_db()
     cursor = db.cursor()
 
@@ -122,6 +127,7 @@ def main():
 
         if not recco_id:
             print("❌ Recco ID non trouvé\n")
+            # Valeur -1 = track ignoree ensuite dans les filtres >= 0
             update_track(track["id"], {
                 "energy": -1,
                 "valence": -1,

@@ -21,6 +21,7 @@ from functools import wraps
 load_dotenv()
 
 app = Flask(__name__)
+# On lit les origines autorisees depuis .env pour controler le CORS
 allowed_origins = os.getenv(
     "FRONTEND_ORIGINS", "http://localhost:5173").split(",")
 allowed_origins = [origin.strip()
@@ -33,7 +34,9 @@ logger = logging.getLogger(__name__)
 SPOTIFY_CLIENT_ID = os.getenv("SPOTIFY_CLIENT_ID")
 SPOTIFY_CLIENT_SECRET = os.getenv("SPOTIFY_CLIENT_SECRET")
 SPOTIFY_REDIRECT_URI = os.getenv("SPOTIFY_REDIRECT_URI")
+# JWT_SECRET sert a signer les tokens d'authentification
 JWT_SECRET = os.getenv("JWT_SECRET", "change-me-in-production")
+# Duree de vie du token en secondes
 JWT_EXP_SECONDS = int(os.getenv("JWT_EXP_SECONDS", str(7 * 24 * 60 * 60)))
 
 if JWT_SECRET == "change-me-in-production":
@@ -45,10 +48,12 @@ os.makedirs(MODEL_DIR, exist_ok=True)
 
 
 def get_model_path(user_id):
+    # Chemin unique du modele d'un utilisateur
     return os.path.join(MODEL_DIR, f"user_model_{user_id}.pkl")
 
 
 def _b64url_encode(data_bytes):
+    # Format base64url utilise par JWT (sans '=' final)
     return base64.urlsafe_b64encode(data_bytes).rstrip(b"=").decode("utf-8")
 
 
@@ -58,8 +63,10 @@ def _b64url_decode(data):
 
 
 def create_jwt(user_id):
+    # Header JWT standard avec algo HS256
     header = {"alg": "HS256", "typ": "JWT"}
     now = int(time.time())
+    # sub = id utilisateur, iat = date emission, exp = date expiration
     payload = {"sub": int(user_id), "iat": now, "exp": now + JWT_EXP_SECONDS}
 
     header_b64 = _b64url_encode(json.dumps(
@@ -76,6 +83,7 @@ def create_jwt(user_id):
 def decode_jwt(token):
     try:
         header_b64, payload_b64, signature_b64 = token.split(".")
+        # On recalcule la signature attendue pour verifier que le token n'a pas ete modifie
         signing_input = f"{header_b64}.{payload_b64}".encode("utf-8")
         expected_signature = hmac.new(JWT_SECRET.encode(
             "utf-8"), signing_input, hashlib.sha256).digest()
@@ -88,6 +96,7 @@ def decode_jwt(token):
         exp = payload.get("exp")
         sub = payload.get("sub")
 
+        # Validation minimale: id utilisateur valide + token pas expire
         if not isinstance(sub, int):
             raise ValueError("Invalid subject")
         if not isinstance(exp, int) or exp < int(time.time()):
@@ -99,6 +108,7 @@ def decode_jwt(token):
 
 
 def require_auth(fn):
+    # Decorateur a mettre sur les routes qui demandent un token valide
     @wraps(fn)
     def wrapper(*args, **kwargs):
         auth_header = request.headers.get("Authorization", "")
@@ -111,6 +121,7 @@ def require_auth(fn):
 
         try:
             payload = decode_jwt(token)
+            # On stocke l'id auth dans g pour l'utiliser dans la route
             g.auth_user_id = int(payload["sub"])
         except ValueError:
             return jsonify({"error": "Invalid token"}), 401
@@ -125,6 +136,7 @@ def require_auth(fn):
 # ===============================
 @app.route("/spotify/login")
 def spotify_login():
+    # Scope Spotify: lecture playlists privees/collaboratives
     scope = "playlist-read-private playlist-read-collaborative"
 
     auth_url = (
@@ -143,6 +155,7 @@ def spotify_login():
 # ===============================
 @app.route("/spotify/callback")
 def spotify_callback():
+    # Code OAuth renvoye par Spotify apres login
     code = request.args.get("code")
     if not code:
         return jsonify({"error": "Missing code"}), 400
@@ -200,6 +213,7 @@ def signup():
             "INSERT INTO users (username, password, genres) VALUES (?, ?, ?)",
             (
                 username,
+                # On ne stocke jamais le mot de passe brut
                 generate_password_hash(password),
                 json.dumps(genres)
             )
@@ -239,6 +253,7 @@ def login():
     if not check_password_hash(user["password"], password):
         return jsonify({"error": "Mot de passe incorrect"}), 401
 
+    # Nouveau token a chaque connexion
     token = create_jwt(user["id"])
 
     return jsonify({
@@ -257,6 +272,7 @@ def login():
 @require_auth
 def recommend():
     data = request.json or {}
+    # L'id vient du token et non du body pour eviter l'usurpation
     user_id = g.auth_user_id
     emotion = data.get("emotion")
 
@@ -355,6 +371,7 @@ def recommend():
     model_path = get_model_path(user_id)
 
     if not os.path.exists(model_path):
+        # Si le modele n'existe pas encore, on retourne un choix aleatoire
         chosen = random.choice(candidates)
         db.close()
         return jsonify({
@@ -368,6 +385,7 @@ def recommend():
     try:
         model = joblib.load(model_path)
     except Exception:
+        # Si chargement modele en erreur, on garde un fallback stable
         logger.warning(
             "Model load failed for user_id=%s. Falling back to random recommendation.", user_id)
         chosen = random.choice(candidates)
@@ -511,6 +529,7 @@ def vote():
 @app.route("/saved/<int:user_id>", methods=["GET"])
 @require_auth
 def get_saved_tracks(user_id):
+    # Protection: un user ne peut pas lire les saves d'un autre user
     if g.auth_user_id != user_id:
         return jsonify({"error": "Forbidden"}), 403
 
@@ -555,6 +574,7 @@ def get_saved_tracks(user_id):
 @require_auth
 def update_preferences():
     data = request.json or {}
+    # L'id vient du token
     user_id = g.auth_user_id
     genres = data.get("genres")
 
@@ -580,6 +600,7 @@ def update_preferences():
 
 
 if __name__ == "__main__":
+    # Render fournit PORT en prod, 5000 reste le fallback local
     flask_debug = os.getenv("FLASK_DEBUG", "0").lower() in ("1", "true", "yes")
     port = int(os.getenv("PORT", "5000"))
     app.run(host="0.0.0.0", port=port, debug=flask_debug)

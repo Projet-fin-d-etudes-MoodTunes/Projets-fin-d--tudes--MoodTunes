@@ -1,3 +1,4 @@
+# Liste centrale des playlists seed, reliees a un genre + emotion
 PLAYLISTS = [
     # Playlist pour pop
     {

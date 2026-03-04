@@ -6,12 +6,14 @@ import time
 
 load_dotenv()
 
+# Variables Spotify chargees depuis .env
 CLIENT_ID = os.getenv("SPOTIFY_CLIENT_ID")
 CLIENT_SECRET = os.getenv("SPOTIFY_CLIENT_SECRET")
 ACCESS_TOKEN = os.getenv("SPOTIFY_TOKEN")
 
 
 def get_access_token():
+    # Token app-level (client credentials), utile pour les scripts de seed
     auth_string = f"{CLIENT_ID}:{CLIENT_SECRET}"
     auth_bytes = auth_string.encode("utf-8")
     auth_base64 = base64.b64encode(auth_bytes).decode("utf-8")
@@ -34,6 +36,7 @@ def get_access_token():
 
 
 def fetch_playlist_tracks(playlist_id):
+    # Recupere les tracks d'une playlist Spotify en paginant sur "next"
     url = f"https://api.spotify.com/v1/playlists/{playlist_id}/items?limit=100"
     token = ACCESS_TOKEN or get_access_token()
 
@@ -51,6 +54,7 @@ def fetch_playlist_tracks(playlist_id):
         print("Status:", result.status_code)
 
         if result.status_code == 429:
+            # Spotify limite le debit, on attend le temps recommande
             retry_after = int(result.headers.get("Retry-After", 5))
             print(f"⏳ Rate limit atteint. Attente {retry_after} secondes...")
             time.sleep(retry_after)

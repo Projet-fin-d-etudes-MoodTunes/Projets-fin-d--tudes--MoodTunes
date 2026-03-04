@@ -26,9 +26,11 @@ function SignUp() {
 
   const { setUser, setToken } = useContext(AuthContext);
   const navigate = useNavigate();
+  // URL backend en prod, fallback localhost en dev
   const API_BASE = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000";
 
   const handleGenreChange = (genreId) => {
+    // Toggle du genre dans la liste selectionnee
     setSelectedGenres((prev) =>
       prev.includes(genreId)
         ? prev.filter((g) => g !== genreId)
@@ -68,11 +70,13 @@ function SignUp() {
         setError(data?.error || "Erreur lors de la création du compte");
         return;
       }
+      // On refuse de continuer si le token n'est pas present
       if (!data?.token) {
         setError("Token manquant dans la reponse serveur");
         return;
       }
 
+      // On stocke user + token
       setUser({
         id: data.id,
         username: data.username,
@@ -176,3 +180,4 @@ function SignUp() {
 }
 
 export default SignUp;
+
