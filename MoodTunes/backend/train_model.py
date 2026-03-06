@@ -27,6 +27,10 @@ os.makedirs(MODEL_DIR, exist_ok=True)
 
 
 def load_user_dataset(user_id):
+    """
+    Construit le dataset d'entrainement pour un utilisateur.
+    On joint `user_history` (likes/dislikes) avec les audio features de `tracks`.
+    """
     # On charge uniquement l'historique du user + features valides
     db = get_db()
 
@@ -60,6 +64,11 @@ def load_user_dataset(user_id):
 
 
 def train_model_for_user(user_id):
+    """
+    Entraine un modele binaire like/dislike pour un user.
+    Le pipeline (scaler + regression logistique) est sauvegarde sur disque
+    pour etre reutilise dans la route /recommend.
+    """
     # Etape 1: charger les exemples likes/dislikes du user
     df = load_user_dataset(user_id)
 
@@ -73,6 +82,7 @@ def train_model_for_user(user_id):
     y = df["liked"]
 
     # Split train/test pour mesurer rapidement la qualite
+    # random_state fixe => resultat reproductible entre deux runs.
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=42
     )

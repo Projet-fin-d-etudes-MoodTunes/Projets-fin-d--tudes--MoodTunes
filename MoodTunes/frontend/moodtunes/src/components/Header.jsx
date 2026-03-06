@@ -3,6 +3,7 @@ import DrawerMenu from "./DrawerMenu";
 import "../styles/AppShell.css";
 
 export default function Header({ onLogout }) {
+  // Etat local du drawer mobile/desktop
   const [open, setOpen] = useState(false);
 
   return (
@@ -17,6 +18,7 @@ export default function Header({ onLogout }) {
         </button>
       </header>
 
+      {/* Le drawer recoit les callbacks de fermeture + logout depuis AppShell */}
       <DrawerMenu open={open} onClose={() => setOpen(false)} onLogout={onLogout} />
     </>
   );

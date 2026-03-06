@@ -24,6 +24,7 @@ export default function Preferences() {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
+    // Prefill formulaire depuis le profil deja charge dans le contexte.
     if (user?.genres) {
       setSelectedGenres(user.genres);
     }
@@ -74,6 +75,7 @@ export default function Preferences() {
       };
 
       setUser(updatedUser);
+      // Double synchro defensive (contexte + localStorage)
       localStorage.setItem("user", JSON.stringify(updatedUser));
 
       setMessage("Préférences mises à jour ✅");

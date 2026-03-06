@@ -10,10 +10,12 @@ import ProtectedRoute from "./components/ProtectedRoute";
 export default function App() {
   return (
     <Routes>
+      {/* Routes publiques */}
       <Route path="/" element={<Landing />} />
       <Route path="/signup" element={<SignUp />} />
       <Route path="/signin" element={<SignIn />} />
 
+      {/* Routes protegees par JWT via ProtectedRoute */}
       <Route
         path="/home"
         element={

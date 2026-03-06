@@ -21,6 +21,10 @@ from functools import wraps
 load_dotenv()
 
 app = Flask(__name__)
+# Ce fichier centralise:
+# - auth JWT (creation + verification)
+# - routes utilisateur (signup/login/preferences)
+# - recommandation + feedback (vote) pour le moteur musical
 # On lit les origines autorisees depuis .env pour controler le CORS
 allowed_origins = os.getenv(
     "FRONTEND_ORIGINS", "http://localhost:5173").split(",")
@@ -63,6 +67,7 @@ def _b64url_decode(data):
 
 
 def create_jwt(user_id):
+    """Cree un JWT signe (HS256) contenant l'id user et une expiration."""
     # Header JWT standard avec algo HS256
     header = {"alg": "HS256", "typ": "JWT"}
     now = int(time.time())
@@ -81,6 +86,7 @@ def create_jwt(user_id):
 
 
 def decode_jwt(token):
+    """Verifie signature + expiration du token puis retourne le payload."""
     try:
         header_b64, payload_b64, signature_b64 = token.split(".")
         # On recalcule la signature attendue pour verifier que le token n'a pas ete modifie
@@ -297,7 +303,10 @@ def recommend():
     user_genres = json.loads(user["genres"])
     placeholders = ",".join(["?"] * len(user_genres))
 
-    # Filtrage de base
+    # Filtrage de base:
+    # 1) emotion + genres user
+    # 2) morceaux avec features valides
+    # 3) exclusion des dislikes et des 10 derniers titres proposes
     query = f"""
         SELECT *
         FROM tracks
@@ -357,7 +366,8 @@ def recommend():
         if valid:
             filtered_candidates.append(track)
 
-    # fallback si trop strict
+    # Fallback: si les seuils emotionnels sont trop stricts,
+    # on garde la liste initiale pour eviter une reponse vide.
     if not filtered_candidates:
         filtered_candidates = candidates
 
@@ -367,7 +377,7 @@ def recommend():
         db.close()
         return jsonify({"error": "Aucune musique trouvée"}), 404
 
-    # Charger modèle
+    # Charger modele personnalise du user (si deja entraine)
     model_path = get_model_path(user_id)
 
     if not os.path.exists(model_path):
@@ -446,7 +456,7 @@ def recommend():
 
     X_candidates = df_candidates[FEATURE_COLUMNS]
 
-    # Calcul probabilité ML
+    # Le modele renvoie P(dislike), P(like) -> on prend la colonne "like".
     probabilities = model.predict_proba(X_candidates)[:, 1]
 
     df_candidates["score"] = probabilities
@@ -454,7 +464,7 @@ def recommend():
     # Trier par score décroissant
     df_candidates = df_candidates.sort_values(by="score", ascending=False)
 
-    # Top 30
+    # Top 30 pour equilibrer qualite + diversite
     top_n = df_candidates.head(30)
 
     logger.debug("Top candidate scores computed for user_id=%s", user_id)
@@ -515,7 +525,8 @@ def vote():
 
     db.close()
 
-    # Retrain batch de 10
+    # Retrain batch de 10:
+    # reduit la charge et evite de re-entrainer apres chaque vote.
     if total % 10 == 0 and total >= 20:
         logger.info("Retraining model for user %s (total=%s)", user_id, total)
         train_model_for_user(user_id)

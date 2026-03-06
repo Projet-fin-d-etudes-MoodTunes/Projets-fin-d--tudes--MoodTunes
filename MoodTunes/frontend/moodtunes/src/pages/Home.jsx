@@ -113,6 +113,9 @@ export default function Home() {
   // URL backend en prod, fallback localhost en dev
   const API_BASE = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000";
 
+  // `screen` pilote les 2 etapes UI:
+  // - choose: selection de l'emotion
+  // - player: lecture Spotify + vote like/dislike
   const [screen, setScreen] = useState("choose");
   const [emotionId, setEmotionId] = useState("base");
   const [currentTrack, setCurrentTrack] = useState(null);
@@ -161,6 +164,7 @@ export default function Home() {
         return;
       }
 
+      // Reponse attendue: track + embed_url pour alimenter le player Spotify.
       setCurrentTrack(data);
       setEmotionId(id);
       setScreen("player");
@@ -171,6 +175,7 @@ export default function Home() {
 
   const handleVote = async (liked) => {
     if (!currentTrack) {
+      // Cas de securite: aucun morceau charge, on retourne a l'ecran de choix.
       goToScreen("choose");
       return;
     }
@@ -192,6 +197,7 @@ export default function Home() {
       });
 
       window.setTimeout(() => {
+        // Apres vote, on revient au choix pour enchaîner une nouvelle reco.
         goToScreen("choose");
       }, 300);
     } catch (err) {
@@ -208,6 +214,7 @@ export default function Home() {
   };
 
   const CHOOSABLE_EMOTIONS = useMemo(
+    // "base" est reservee au theme neutre de depart, non selectionnable comme humeur.
     () => EMOTIONS.filter((e) => e.id !== "base"),
     []
   );

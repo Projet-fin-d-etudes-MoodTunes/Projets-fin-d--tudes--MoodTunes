@@ -39,6 +39,7 @@ function SignUp() {
   };
 
   const handleSubmit = async () => {
+    // Validation minimale cote client pour eviter des appels API inutiles.
     setError("");
 
     if (!username || !password) {
@@ -84,6 +85,7 @@ function SignUp() {
       });
       setToken(data.token);
 
+      // Conservation locale pour restaurer la session apres refresh.
       localStorage.setItem("token", data.token);
 
       navigate("/home");

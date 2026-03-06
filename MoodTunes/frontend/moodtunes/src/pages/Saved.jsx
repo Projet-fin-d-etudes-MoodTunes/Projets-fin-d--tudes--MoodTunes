@@ -31,6 +31,7 @@ export default function Saved() {
     })
       .then(res => res.json())
       .then(data => {
+        // Le backend renvoie deja la liste triee par dernier like.
         setTracks(data);
         setLoading(false);
       })
