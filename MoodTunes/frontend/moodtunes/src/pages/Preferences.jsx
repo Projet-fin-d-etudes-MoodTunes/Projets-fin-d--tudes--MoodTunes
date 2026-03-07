@@ -14,7 +14,7 @@ const GENRES = [
 ];
 
 export default function Preferences() {
-  const { user, setUser, token, setToken } = useContext(AuthContext);
+  const { user, setUser, token, logout } = useContext(AuthContext);
   const navigate = useNavigate();
   // URL backend en prod, fallback localhost en dev
   const API_BASE = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000";
@@ -24,14 +24,14 @@ export default function Preferences() {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    // Prefill formulaire depuis le profil deja charge dans le contexte.
+    // Forrmulaire pré remplit avec les informations des genres sur le user
     if (user?.genres) {
       setSelectedGenres(user.genres);
     }
   }, [user]);
 
   const handleGenreChange = (genreId) => {
-    // Toggle du genre dans la liste selectionnee
+    // Toggle du genre dans la liste sélectionnée
     setSelectedGenres((prev) =>
       prev.includes(genreId)
         ? prev.filter((g) => g !== genreId)
@@ -48,8 +48,8 @@ export default function Preferences() {
     setLoading(true);
     setMessage("");
 
+    // Mise à jour des préférences sur le serveur (backend)
     try {
-      // Route protegee: token obligatoire
       const response = await fetch(`${API_BASE}/preferences`, {
         method: "PUT",
         headers: {
@@ -68,14 +68,14 @@ export default function Preferences() {
         return;
       }
 
+      // On met aussi a jour le local
       const updatedUser = {
         ...user,
-        // On met aussi a jour le user local pour afficher direct les nouvelles prefs
         genres: selectedGenres,
       };
 
       setUser(updatedUser);
-      // Double synchro defensive (contexte + localStorage)
+
       localStorage.setItem("user", JSON.stringify(updatedUser));
 
       setMessage("Préférences mises à jour ✅");
@@ -87,10 +87,7 @@ export default function Preferences() {
   };
 
   const handleLogout = () => {
-    // Deconnexion locale
-    setUser(null);
-    setToken(null);
-    localStorage.removeItem("token");
+    logout();
     navigate("/");
   };
 

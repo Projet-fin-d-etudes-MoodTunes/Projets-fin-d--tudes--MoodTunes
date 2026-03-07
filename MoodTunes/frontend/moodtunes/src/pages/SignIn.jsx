@@ -46,7 +46,7 @@ function SignIn() {
       });
       setToken(data.token);
 
-      // Conservation locale pour recharger proprement la session apres refresh.
+      // Conservation locale pour recharger proprement la session apres refresh
       localStorage.setItem("token", data.token);
 
       navigate("/home");

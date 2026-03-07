@@ -5,7 +5,7 @@ import { AuthContext } from "../AuthContext";
 import "../styles/Saved.css";
 
 export default function Saved() {
-  const { user, setUser, token, setToken } = useContext(AuthContext);
+  const { user, token, logout } = useContext(AuthContext);
   const navigate = useNavigate();
   // URL backend en prod, fallback localhost en dev
   const API_BASE = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000";
@@ -13,17 +13,14 @@ export default function Saved() {
   const [loading, setLoading] = useState(true);
 
   const handleLogout = () => {
-    // Deconnexion locale
-    setUser(null);
-    setToken(null);
-    localStorage.removeItem("token");
+    logout();
     navigate("/");
   };
 
+  // On récupère la liste des musiques aimées
   useEffect(() => {
     if (!user?.id) return;
 
-    // Route protegee: token obligatoire
     fetch(`${API_BASE}/saved/${user.id}`, {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -31,7 +28,6 @@ export default function Saved() {
     })
       .then(res => res.json())
       .then(data => {
-        // Le backend renvoie deja la liste triee par dernier like.
         setTracks(data);
         setLoading(false);
       })

@@ -3,13 +3,10 @@ from playlist_config import PLAYLISTS
 from spotify_service import fetch_playlist_tracks
 import time
 
+# Remplir la table tracks avec les musiques des playlists
+
 
 def save_tracks(tracks, emotion, genre, playlist_id):
-    """
-    Persiste les tracks recuperees pour une playlist/emotion/genre.
-    Le schema `tracks` sert ensuite de base aux recommandations.
-    """
-    # Insert des tracks d'une playlist dans la table tracks
     db = get_db()
     cursor = db.cursor()
 
@@ -40,10 +37,6 @@ def save_tracks(tracks, emotion, genre, playlist_id):
 
 
 def main():
-    """
-    Lance l'import Spotify playlist par playlist.
-    `START_INDEX` permet de reprendre un seed interrompu sans recommencer.
-    """
     # Permet de reprendre un import au milieu sans relancer depuis 0
     START_INDEX = 11  # playlist 12 (index commence a 0)
 
@@ -63,7 +56,7 @@ def main():
             playlist["playlist_id"],
         )
 
-        # Pause pour eviter le rate limit
+        # Pause pour éviter le rate limit et se faire bloquer
         print("Pause 10 secondes...")
         time.sleep(10)
 

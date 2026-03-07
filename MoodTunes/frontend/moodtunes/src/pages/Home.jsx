@@ -8,6 +8,7 @@ import "../styles/Home.css";
 // THEME DE BASE
 const BASE_GRADIENT = ["#363742", "#7160a5", "#457287"];
 
+// Les configurations pour le background floating lines pour chaque émotion
 const EMOTIONS = [
   {
     id: "base",
@@ -108,14 +109,14 @@ const EMOTIONS = [
 ];
 
 export default function Home() {
-  const { user, setUser, token, setToken } = useContext(AuthContext);
+  const { user, token, logout } = useContext(AuthContext);
   const navigate = useNavigate();
   // URL backend en prod, fallback localhost en dev
   const API_BASE = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000";
 
-  // `screen` pilote les 2 etapes UI:
-  // - choose: selection de l'emotion
-  // - player: lecture Spotify + vote like/dislike
+  // screen pilote les 2 etapes UI:
+  // choose: selection de l'emotion
+  // player: lecture Spotify + vote like/dislike
   const [screen, setScreen] = useState("choose");
   const [emotionId, setEmotionId] = useState("base");
   const [currentTrack, setCurrentTrack] = useState(null);
@@ -134,7 +135,7 @@ export default function Home() {
   }, []);
 
   const goToScreen = useCallback((nextScreen) => {
-    // Petite transition visuelle entre les deux ecrans
+    // Transition visuelle entre les deux états (screen)
     setTransitioning(true);
     window.setTimeout(() => {
       setScreen(nextScreen);
@@ -152,7 +153,6 @@ export default function Home() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          // L'id user n'est plus envoye: backend le lit dans le token
           emotion: id,
         }),
       });
@@ -164,7 +164,7 @@ export default function Home() {
         return;
       }
 
-      // Reponse attendue: track + embed_url pour alimenter le player Spotify.
+      // Reponse attendue: track + embed_url
       setCurrentTrack(data);
       setEmotionId(id);
       setScreen("player");
@@ -175,13 +175,12 @@ export default function Home() {
 
   const handleVote = async (liked) => {
     if (!currentTrack) {
-      // Cas de securite: aucun morceau charge, on retourne a l'ecran de choix.
+      // Mesure de sécurité pour ne pas envoye un vote invalie, on vérifie que il y a un une musqiue, sinon retourne au screen de choose
       goToScreen("choose");
       return;
     }
 
     try {
-      // Vote protege avec le JWT
       await fetch(`${API_BASE}/vote`, {
         method: "POST",
         headers: {
@@ -191,7 +190,6 @@ export default function Home() {
         body: JSON.stringify({
           track_id: currentTrack.track_id,
           emotion: emotionId,
-          // Conversion booleen => 1/0 pour rester compatible SQL
           liked: liked ? 1 : 0,
         }),
       });
@@ -206,15 +204,12 @@ export default function Home() {
   };
 
   const handleLogout = () => {
-    // Reset session locale
-    setUser(null);
-    setToken(null);
-    localStorage.removeItem("token");
+    logout();
     navigate("/");
   };
 
   const CHOOSABLE_EMOTIONS = useMemo(
-    // "base" est reservee au theme neutre de depart, non selectionnable comme humeur.
+    // Le thème de base n'est pas sélectionnable
     () => EMOTIONS.filter((e) => e.id !== "base"),
     []
   );
@@ -235,6 +230,7 @@ export default function Home() {
 
   return (
     <AppShell onLogout={handleLogout}>
+      {/* Background des vagues */}
       <div className="home-root">
         <div className="floating-bg" aria-hidden="true">
           <FloatingLines
@@ -255,7 +251,7 @@ export default function Home() {
             waveThickness={active.waveThickness}
           />
         </div>
-
+        {/* Overlay de pour éviter le contraste entre les fonctionnalités et le background des vagues */}
         <div
           className="ui-overlay"
           style={{

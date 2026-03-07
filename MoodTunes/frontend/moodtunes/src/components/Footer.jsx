@@ -6,7 +6,6 @@ export default function Footer() {
   const navigate = useNavigate();
 
   const go = (e, path) => {
-    // Navigation SPA: on bloque le comportement natif du lien.
     e.preventDefault();
     navigate(path);
   };

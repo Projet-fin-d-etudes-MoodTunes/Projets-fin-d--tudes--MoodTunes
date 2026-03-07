@@ -42,6 +42,8 @@ function SignUp() {
     // Validation minimale cote client pour eviter des appels API inutiles.
     setError("");
 
+
+    // Vérification que tous les champs sont remplis
     if (!username || !password) {
       setError("Veuillez remplir tous les champs");
       return;
@@ -71,7 +73,7 @@ function SignUp() {
         setError(data?.error || "Erreur lors de la création du compte");
         return;
       }
-      // On refuse de continuer si le token n'est pas present
+      // On refuse de continuer si le token n'est pas présent
       if (!data?.token) {
         setError("Token manquant dans la reponse serveur");
         return;

@@ -31,8 +31,17 @@ export function AuthProvider({ children }) {
     }
   }, [token]);
 
+
+  // On réinitialise les données lors de la déconnexion
+  const logout = () => {
+    setUser(null);
+    setToken(null);
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+  };
+
   return (
-    <AuthContext.Provider value={{ user, setUser, token, setToken }}>
+    <AuthContext.Provider value={{ user, setUser, token, setToken, logout }}>
       {children}
     </AuthContext.Provider>
   );

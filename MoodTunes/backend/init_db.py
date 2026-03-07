@@ -43,8 +43,7 @@ CREATE TABLE IF NOT EXISTS user_history (
 )
 """)
 
-# Index utilises par les routes de recommandation et historique
-# Objectif: accelerer les filtres frequents (emotion/genre, user_id, liked)
+# Index utilisés par les routes de recommandation et historique pour permettre aux requêtes d'être plus vite
 cursor.execute(
     "CREATE INDEX IF NOT EXISTS idx_tracks_emotion_genre ON tracks(emotion, genre)")
 cursor.execute(

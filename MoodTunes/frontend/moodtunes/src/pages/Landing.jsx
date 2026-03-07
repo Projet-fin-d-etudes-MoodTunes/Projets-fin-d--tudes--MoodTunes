@@ -1,4 +1,3 @@
-// Landing.jsx (modifs: juste ajout de classes sur les boutons)
 import { useNavigate } from "react-router-dom";
 import { useContext, useEffect, useRef, useState } from "react";
 import { AuthContext } from "../AuthContext";
@@ -14,6 +13,8 @@ function Landing() {
   const overlayRef = useRef(null);
   const hasAnimatedOut = useRef(false);
 
+
+  // Défilement vers le haut quand l'animation du text d'intro est finit
   useEffect(() => {
     const t = setTimeout(() => {
       if (hasAnimatedOut.current) return;
@@ -30,6 +31,7 @@ function Landing() {
     return () => clearTimeout(t);
   }, []);
 
+  // Alternance de couleur sur les blocs de connexion et de créer un compte
   const [hovered, setHovered] = useState(null);
   const [colorIndex, setColorIndex] = useState(0);
   const colors = ["signin", "signup"];
@@ -87,7 +89,6 @@ function Landing() {
               : "Reprenez où vous avez quitté !"}
           </p>
 
-          {/* ✅ bouton qui alterne aussi (clair/foncé) */}
           <button
             className={`cta-button ${
               activeBlock === "signin" ? "btn-active" : "btn-inactive"
@@ -111,8 +112,6 @@ function Landing() {
               ? "Créez votre compte et découvrez de nouvelles musiques !"
               : "Découvrez de nouvelles musiques selon votre humeur !"}
           </p>
-
-          {/* ✅ bouton qui alterne aussi (clair/foncé) */}
           <button
             className={`cta-button ${
               activeBlock === "signup" ? "btn-active" : "btn-inactive"

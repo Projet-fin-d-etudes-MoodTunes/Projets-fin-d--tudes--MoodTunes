@@ -1,6 +1,3 @@
-# Liste centrale des playlists seed, reliees a un genre + emotion.
-# Cette structure est consommee par seed_tracks.py pour importer la base
-# initiale de morceaux utilises par l'algorithme de recommandation.
 PLAYLISTS = [
     # Playlist pour pop
     {

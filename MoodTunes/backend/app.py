@@ -21,11 +21,7 @@ from functools import wraps
 load_dotenv()
 
 app = Flask(__name__)
-# Ce fichier centralise:
-# - auth JWT (creation + verification)
-# - routes utilisateur (signup/login/preferences)
-# - recommandation + feedback (vote) pour le moteur musical
-# On lit les origines autorisees depuis .env pour controler le CORS
+# On lit les origines qui sont autorisées dans .env pour le CORS
 allowed_origins = os.getenv(
     "FRONTEND_ORIGINS", "http://localhost:5173").split(",")
 allowed_origins = [origin.strip()
@@ -38,9 +34,9 @@ logger = logging.getLogger(__name__)
 SPOTIFY_CLIENT_ID = os.getenv("SPOTIFY_CLIENT_ID")
 SPOTIFY_CLIENT_SECRET = os.getenv("SPOTIFY_CLIENT_SECRET")
 SPOTIFY_REDIRECT_URI = os.getenv("SPOTIFY_REDIRECT_URI")
-# JWT_SECRET sert a signer les tokens d'authentification
+# Sert a signer les tokens d'authentification
 JWT_SECRET = os.getenv("JWT_SECRET", "change-me-in-production")
-# Duree de vie du token en secondes
+# Durée de vie du token en secondes
 JWT_EXP_SECONDS = int(os.getenv("JWT_EXP_SECONDS", str(7 * 24 * 60 * 60)))
 
 if JWT_SECRET == "change-me-in-production":
@@ -50,14 +46,14 @@ if JWT_SECRET == "change-me-in-production":
 MODEL_DIR = os.path.join(os.path.dirname(__file__), "models")
 os.makedirs(MODEL_DIR, exist_ok=True)
 
+# Chemin pour trouver le modèle de l'utilisateur
+
 
 def get_model_path(user_id):
-    # Chemin unique du modele d'un utilisateur
     return os.path.join(MODEL_DIR, f"user_model_{user_id}.pkl")
 
 
 def _b64url_encode(data_bytes):
-    # Format base64url utilise par JWT (sans '=' final)
     return base64.urlsafe_b64encode(data_bytes).rstrip(b"=").decode("utf-8")
 
 
@@ -65,13 +61,13 @@ def _b64url_decode(data):
     padding = "=" * (-len(data) % 4)
     return base64.urlsafe_b64decode(data + padding)
 
+# Création d'un JWT associé à un ID
+
 
 def create_jwt(user_id):
-    """Cree un JWT signe (HS256) contenant l'id user et une expiration."""
-    # Header JWT standard avec algo HS256
     header = {"alg": "HS256", "typ": "JWT"}
     now = int(time.time())
-    # sub = id utilisateur, iat = date emission, exp = date expiration
+
     payload = {"sub": int(user_id), "iat": now, "exp": now + JWT_EXP_SECONDS}
 
     header_b64 = _b64url_encode(json.dumps(
@@ -86,10 +82,8 @@ def create_jwt(user_id):
 
 
 def decode_jwt(token):
-    """Verifie signature + expiration du token puis retourne le payload."""
     try:
         header_b64, payload_b64, signature_b64 = token.split(".")
-        # On recalcule la signature attendue pour verifier que le token n'a pas ete modifie
         signing_input = f"{header_b64}.{payload_b64}".encode("utf-8")
         expected_signature = hmac.new(JWT_SECRET.encode(
             "utf-8"), signing_input, hashlib.sha256).digest()
@@ -102,7 +96,7 @@ def decode_jwt(token):
         exp = payload.get("exp")
         sub = payload.get("sub")
 
-        # Validation minimale: id utilisateur valide + token pas expire
+        # ID utilisateur valide + token pas expiré
         if not isinstance(sub, int):
             raise ValueError("Invalid subject")
         if not isinstance(exp, int) or exp < int(time.time()):
@@ -112,9 +106,10 @@ def decode_jwt(token):
     except Exception as exc:
         raise ValueError("Invalid token") from exc
 
+# Fonction de sécurité pour les routes Flask
+
 
 def require_auth(fn):
-    # Decorateur a mettre sur les routes qui demandent un token valide
     @wraps(fn)
     def wrapper(*args, **kwargs):
         auth_header = request.headers.get("Authorization", "")
@@ -137,12 +132,10 @@ def require_auth(fn):
     return wrapper
 
 
-# ===============================
 # Spotify Login
-# ===============================
+# Fonction et route qui permet la connexion à mon compte Spotify pour obtenir les playlists
 @app.route("/spotify/login")
 def spotify_login():
-    # Scope Spotify: lecture playlists privees/collaboratives
     scope = "playlist-read-private playlist-read-collaborative"
 
     auth_url = (
@@ -156,12 +149,11 @@ def spotify_login():
     return redirect(auth_url)
 
 
-# ===============================
 # Spotify Callback
-# ===============================
+# Fonction et route qui permet de recevoir le token pour faire le lien entre l'API et le code
 @app.route("/spotify/callback")
 def spotify_callback():
-    # Code OAuth renvoye par Spotify apres login
+    # Code OAuth renvoyé par Spotify apres la connexion
     code = request.args.get("code")
     if not code:
         return jsonify({"error": "Missing code"}), 400
@@ -182,7 +174,7 @@ def spotify_callback():
         "code": code,
         "redirect_uri": SPOTIFY_REDIRECT_URI
     }
-
+    # Déboggage pour savoir si l'autentification a marché
     try:
         response = requests.post(url, headers=headers, data=data, timeout=10)
         response.raise_for_status()
@@ -198,9 +190,8 @@ def spotify_callback():
     })
 
 
-# ===============================
 # Signup
-# ===============================
+# Fonction et route dans laquelle le user est créé en gardant en donné son username, son id, son passwrod et les genres de musiques aiméees
 @app.route("/signup", methods=["POST"])
 def signup():
     data = request.json or {}
@@ -219,7 +210,7 @@ def signup():
             "INSERT INTO users (username, password, genres) VALUES (?, ?, ?)",
             (
                 username,
-                # On ne stocke jamais le mot de passe brut
+                # Mot de passe sécurisé
                 generate_password_hash(password),
                 json.dumps(genres)
             )
@@ -237,9 +228,8 @@ def signup():
     return jsonify({"id": user_id, "username": username, "genres": genres, "token": token}), 201
 
 
-# ===============================
 # Login
-# ===============================
+# Fonction et route dans laquelle on regarde dans la base de données si le user et le mot de passse match les inputs du user
 @app.route("/login", methods=["POST"])
 def login():
     data = request.json or {}
@@ -259,7 +249,7 @@ def login():
     if not check_password_hash(user["password"], password):
         return jsonify({"error": "Mot de passe incorrect"}), 401
 
-    # Nouveau token a chaque connexion
+    # Nouveau token a chaque connexion par raison de sécurité
     token = create_jwt(user["id"])
 
     return jsonify({
@@ -269,16 +259,16 @@ def login():
         "token": token
     })
 
-# ===============================
-# RECOMMENDATION
-# ===============================
+# Recommandation
+# Fonction et route de recommandation de musiques
 
 
 @app.route("/recommend", methods=["POST"])
 @require_auth
 def recommend():
     data = request.json or {}
-    # L'id vient du token et non du body pour eviter l'usurpation
+
+    # On récupère le user id et l'émotion sélectionnée
     user_id = g.auth_user_id
     emotion = data.get("emotion")
 
@@ -292,7 +282,7 @@ def recommend():
     db = get_db()
     cursor = db.cursor()
 
-    #  Récupérer genres utilisateur
+    # On récupère les genres aimées par le user
     cursor.execute("SELECT genres FROM users WHERE id = ?", (user_id,))
     user = cursor.fetchone()
 
@@ -304,9 +294,9 @@ def recommend():
     placeholders = ",".join(["?"] * len(user_genres))
 
     # Filtrage de base:
-    # 1) emotion + genres user
-    # 2) morceaux avec features valides
-    # 3) exclusion des dislikes et des 10 derniers titres proposes
+    # 1. emotion + genres aimées par le user
+    # 2. on exclut les musiques sans features (-1)
+    # 3. on exclut les dislikes et les musiques qui ont été recommandées parmi les 10 dernières
     query = f"""
         SELECT *
         FROM tracks
@@ -339,6 +329,7 @@ def recommend():
     cursor.execute(query, params)
     candidates = cursor.fetchall()
 
+    # On fait un deuxième filtre par la suite pour que les musiques respectent tout de même un minimum l'émotion sélectionné si il y a une musique mise par accident dans une playlist
     EMOTION_PROFILES = {
         "heureux": {"energy_min": 0.6, "valence_min": 0.6},
         "calme": {"energy_max": 0.4},
@@ -366,8 +357,7 @@ def recommend():
         if valid:
             filtered_candidates.append(track)
 
-    # Fallback: si les seuils emotionnels sont trop stricts,
-    # on garde la liste initiale pour eviter une reponse vide.
+    # On garde la liste initiale si aucune musique respecte les critères
     if not filtered_candidates:
         filtered_candidates = candidates
 
@@ -377,9 +367,10 @@ def recommend():
         db.close()
         return jsonify({"error": "Aucune musique trouvée"}), 404
 
-    # Charger modele personnalise du user (si deja entraine)
+    # On charge le modèle ML si le user en a un
     model_path = get_model_path(user_id)
 
+    # Sinon on prend une musiques au hasard parmi les candidats
     if not os.path.exists(model_path):
         # Si le modele n'existe pas encore, on retourne un choix aleatoire
         chosen = random.choice(candidates)
@@ -395,7 +386,7 @@ def recommend():
     try:
         model = joblib.load(model_path)
     except Exception:
-        # Si chargement modele en erreur, on garde un fallback stable
+
         logger.warning(
             "Model load failed for user_id=%s. Falling back to random recommendation.", user_id)
         chosen = random.choice(candidates)
@@ -408,6 +399,7 @@ def recommend():
             "embed_url": chosen["embed_url"]
         })
 
+    # Ordre et liste des audio features
     FEATURE_COLUMNS = [
         "energy",
         "valence",
@@ -419,9 +411,10 @@ def recommend():
         "loudness"
     ]
 
-    # Construire DataFrame candidats depuis sqlite3.Row
+    # On construit un DataFrame pour pouvoir utiliser les données
     df_candidates = pd.DataFrame([dict(row) for row in candidates])
 
+    # On regarde que chaque musique ait toutes les colonnes nécessaires
     missing_features = [
         col for col in FEATURE_COLUMNS if col not in df_candidates.columns]
     if missing_features:
@@ -440,7 +433,7 @@ def recommend():
             "embed_url": chosen["embed_url"]
         })
 
-    # Supprimer lignes invalides
+    # On supprime les musiques qui manque des données
     df_candidates = df_candidates.dropna(subset=FEATURE_COLUMNS)
 
     if df_candidates.empty:
@@ -454,22 +447,24 @@ def recommend():
             "embed_url": chosen["embed_url"]
         })
 
+    # Construcion du X pour le modèle
     X_candidates = df_candidates[FEATURE_COLUMNS]
 
-    # Le modele renvoie P(dislike), P(like) -> on prend la colonne "like".
+    # Il renvoie les musiques que l'utilisateur aimerais ou pas et on chosit celle qu'il aimerait
     probabilities = model.predict_proba(X_candidates)[:, 1]
 
+    # Chaque musique obtient un score de probabilité
     df_candidates["score"] = probabilities
 
-    # Trier par score décroissant
+    # Trier en décroissant
     df_candidates = df_candidates.sort_values(by="score", ascending=False)
 
-    # Top 30 pour equilibrer qualite + diversite
+    # On choisit les 30 meilleures
     top_n = df_candidates.head(30)
 
     logger.debug("Top candidate scores computed for user_id=%s", user_id)
 
-    # Random parmi top
+    # On choisit une musique aléatoire parmi le top 30
     chosen = top_n.sample(1).iloc[0]
 
     db.close()
@@ -481,9 +476,9 @@ def recommend():
         "artist": chosen["artist"],
         "embed_url": chosen["embed_url"]
     })
-# ===============================
+
 # Vote du user
-# ===============================
+# Fonction et route qui permet le vote sur une musique
 
 
 @app.route("/vote", methods=["POST"])
@@ -491,6 +486,7 @@ def recommend():
 def vote():
     data = request.json or {}
 
+    # On obtient le user et musique id pour pouvoir associé l'opinion à celle ci
     user_id = g.auth_user_id
     track_id = data.get("track_id")
     emotion = data.get("emotion")
@@ -506,7 +502,7 @@ def vote():
     db = get_db()
     cursor = db.cursor()
 
-    # Sauvegarder vote
+    # On sauvegarde le vote dans la BDD
     cursor.execute("""
         INSERT INTO user_history (user_id, track_id, emotion, liked)
         VALUES (?, ?, ?, ?)
@@ -514,7 +510,7 @@ def vote():
 
     db.commit()
 
-    # Compter interactions
+    # On compte les intéractions pour pouvoir entraîner le ML modèle
     cursor.execute("""
         SELECT COUNT(*) as total
         FROM user_history
@@ -525,8 +521,7 @@ def vote():
 
     db.close()
 
-    # Retrain batch de 10:
-    # reduit la charge et evite de re-entrainer apres chaque vote.
+    # On re entraine le modèle après chaque 10 intéraction et il faut un minimum de 20 intéractions pour pouvoir l'entrainer
     if total % 10 == 0 and total >= 20:
         logger.info("Retraining model for user %s (total=%s)", user_id, total)
         train_model_for_user(user_id)
@@ -534,13 +529,12 @@ def vote():
     return jsonify({"message": "Vote saved"})
 
 
-# ===============================
 # Musiques sauvegardées
-# ===============================
+# Fonction et route pour pouvoir avoir accès aux musiques aimées (sauvegardées)
 @app.route("/saved/<int:user_id>", methods=["GET"])
 @require_auth
 def get_saved_tracks(user_id):
-    # Protection: un user ne peut pas lire les saves d'un autre user
+    # Mesure de sécurité, on peut juste voir ses propres liked
     if g.auth_user_id != user_id:
         return jsonify({"error": "Forbidden"}), 403
 
@@ -566,6 +560,7 @@ def get_saved_tracks(user_id):
     tracks = cursor.fetchall()
     db.close()
 
+    # On retourne les informations nécessaires pour pouvoir afficher chaque musiques liked
     return jsonify([
         {
             "track_id": track["id"],
@@ -578,14 +573,13 @@ def get_saved_tracks(user_id):
     ])
 
 
-# ===============================
 # Update user preferences
-# ===============================
+# Fonction et route pour pouvoir modifier les préférences musicales du user
 @app.route("/preferences", methods=["PUT"])
 @require_auth
 def update_preferences():
     data = request.json or {}
-    # L'id vient du token
+    # On obtient l'ID à travers le token de connexion JWT
     user_id = g.auth_user_id
     genres = data.get("genres")
 
@@ -595,6 +589,7 @@ def update_preferences():
     db = get_db()
     cursor = db.cursor()
 
+    # On met à jour dans la BDD
     cursor.execute("""
         UPDATE users
         SET genres = ?
@@ -611,7 +606,6 @@ def update_preferences():
 
 
 if __name__ == "__main__":
-    # Render fournit PORT en prod, 5000 reste le fallback local
     flask_debug = os.getenv("FLASK_DEBUG", "0").lower() in ("1", "true", "yes")
     port = int(os.getenv("PORT", "5000"))
     app.run(host="0.0.0.0", port=port, debug=flask_debug)

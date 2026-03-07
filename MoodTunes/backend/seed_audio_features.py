@@ -7,16 +7,8 @@ BASE_URL = "https://api.reccobeats.com/v1"
 DELAY_SECONDS = 1
 
 
-# ==========================================
-# Obtenir le Reccobeats ID depuis Spotify ID
-# ==========================================
+# Fonction pour trouver le Reccobeats ID depuis Spotify ID pour chaque musiquee
 def get_reccobeats_id(spotify_id):
-    """
-    Mappe un Spotify ID vers un identifiant interne Reccobeats.
-    Cette etape est necessaire car l'API des audio features est exposee
-    via l'id Reccobeats, pas directement via l'id Spotify.
-    """
-    # Etape 1: mapping Spotify ID -> Reccobeats ID
     url = f"{BASE_URL}/track?ids={spotify_id}"
 
     try:
@@ -44,15 +36,8 @@ def get_reccobeats_id(spotify_id):
         return None
 
 
-# ==========================================
 # Récupérer audio features via Recco ID
-# ==========================================
 def fetch_audio_features(recco_id):
-    """
-    Recupere les features audio d'un morceau (energy, valence, tempo, etc.).
-    Retourne `None` en cas d'erreur API.
-    """
-    # Etape 2: recuperation des features audio via l'id Reccobeats
     url = f"{BASE_URL}/track/{recco_id}/audio-features"
 
     try:
@@ -75,15 +60,10 @@ def fetch_audio_features(recco_id):
         return None
 
 
-# ==========================================
 # Update base de données
-# ==========================================
+# Fonction qui sauvegarde les audio features dans la table tracks
 def update_track(track_id, features):
-    """
-    Ecrit les features dans la table `tracks`.
-    Cette mise a jour rend les morceaux exploitables par le modele ML.
-    """
-    # Sauvegarde des features dans la table tracks
+
     db = get_db()
     cursor = db.cursor()
 
@@ -114,17 +94,9 @@ def update_track(track_id, features):
     db.close()
 
 
-# ==========================================
 # Script principal
-# ==========================================
 def main():
-    """
-    Parcourt les tracks sans features (`energy IS NULL`) puis:
-    1) lookup reccobeats id
-    2) fetch features
-    3) update SQL
-    """
-    # On traite uniquement les tracks qui n'ont pas encore de feature
+    # On traite uniquement les tracks qui n'ont pas encore de audio features feature
     db = get_db()
     cursor = db.cursor()
 
@@ -146,7 +118,7 @@ def main():
 
         if not recco_id:
             print("❌ Recco ID non trouvé\n")
-            # Valeur -1 = track ignoree ensuite dans les filtres >= 0
+            # Valeur -1 = track ignoéee
             update_track(track["id"], {
                 "energy": -1,
                 "valence": -1,

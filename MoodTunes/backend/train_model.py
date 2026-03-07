@@ -25,13 +25,10 @@ FEATURE_COLUMNS = [
 MODEL_DIR = os.path.join(os.path.dirname(__file__), "models")
 os.makedirs(MODEL_DIR, exist_ok=True)
 
+# Chargement des données dans le dataset associé à l'utilisateur
+
 
 def load_user_dataset(user_id):
-    """
-    Construit le dataset d'entrainement pour un utilisateur.
-    On joint `user_history` (likes/dislikes) avec les audio features de `tracks`.
-    """
-    # On charge uniquement l'historique du user + features valides
     db = get_db()
 
     query = f"""
@@ -62,32 +59,29 @@ def load_user_dataset(user_id):
 
     return df
 
+# Utilisation du LogisticRegression pour entrainer le ML modèle
+
 
 def train_model_for_user(user_id):
-    """
-    Entraine un modele binaire like/dislike pour un user.
-    Le pipeline (scaler + regression logistique) est sauvegarde sur disque
-    pour etre reutilise dans la route /recommend.
-    """
-    # Etape 1: charger les exemples likes/dislikes du user
+    # Charger les likes/dislikes du user
     df = load_user_dataset(user_id)
 
-    # En dessous de 20 exemples, le modele est trop instable
+    # On n'entraine pas le modele ML si il n'y a pas 20 intéractions
     if len(df) < 20:
         print("⚠ Pas assez de données.")
         return None
 
-    # X = features audio, y = cible like/dislike
+    # X = features audio
+    # y = cible like/dislike
     X = df[FEATURE_COLUMNS]
     y = df["liked"]
 
-    # Split train/test pour mesurer rapidement la qualite
-    # random_state fixe => resultat reproductible entre deux runs.
+    # Split train/test pour mesurer rapidement la qualite (20%)
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=42
     )
 
-    # Pipeline = scaling + modèle
+    # Normalise sur la même base les audio features pour qu'elles soient comparables
     pipeline = Pipeline([
         ("scaler", StandardScaler()),
         ("model", LogisticRegression(max_iter=1000, class_weight="balanced", C=0.5))
@@ -107,7 +101,7 @@ def train_model_for_user(user_id):
         print(f"{feature}: {coef:.3f}")
 
     # Sauvegarder pipeline complet
-    # On sauvegarde scaler + modele pour pouvoir predict direct ensuite
+    # On sauvegarde scaler + modele pour pouvoir predict
     model_path = os.path.join(MODEL_DIR, f"user_model_{user_id}.pkl")
     joblib.dump(pipeline, model_path)
 

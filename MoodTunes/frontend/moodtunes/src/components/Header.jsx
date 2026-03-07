@@ -18,7 +18,6 @@ export default function Header({ onLogout }) {
         </button>
       </header>
 
-      {/* Le drawer recoit les callbacks de fermeture + logout depuis AppShell */}
       <DrawerMenu open={open} onClose={() => setOpen(false)} onLogout={onLogout} />
     </>
   );
