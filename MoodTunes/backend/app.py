@@ -450,10 +450,10 @@ def recommend():
     # Construcion du X pour le modèle
     X_candidates = df_candidates[FEATURE_COLUMNS]
 
-    # Il renvoie les musiques que l'utilisateur aimerais ou pas et on chosit celle qu'il aimerait
+    # Il renvoie la probabilité que les musiques soient aimées par l'utilisateur entre 0 et 1
     probabilities = model.predict_proba(X_candidates)[:, 1]
 
-    # Chaque musique obtient un score de probabilité
+    # Chaque musique est assignée son score dans une colonne
     df_candidates["score"] = probabilities
 
     # Trier en décroissant

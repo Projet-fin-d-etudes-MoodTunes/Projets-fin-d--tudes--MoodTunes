@@ -101,7 +101,7 @@ def train_model_for_user(user_id):
         print(f"{feature}: {coef:.3f}")
 
     # Sauvegarder pipeline complet
-    # On sauvegarde scaler + modele pour pouvoir predict
+    # On sauvegarde scaler + modele pour pouvoir faire des prédiction
     model_path = os.path.join(MODEL_DIR, f"user_model_{user_id}.pkl")
     joblib.dump(pipeline, model_path)
 
@@ -112,7 +112,7 @@ def train_model_for_user(user_id):
     # coefficients = model.coef_[0]
     # features = FEATURE_COLUMNS
 
-    # # 📊 Graphique 1 — direction + importance
+    # # Graphique 1 — direction + importance
     # plt.figure(figsize=(10, 6))
     # plt.barh(features, coefficients)
     # plt.axvline(0)
@@ -121,7 +121,7 @@ def train_model_for_user(user_id):
     # plt.tight_layout()
     # plt.show()
 
-    # # 📊 Graphique 2 — magnitude seulement
+    # # Graphique 2 — magnitude seulement
     # plt.figure(figsize=(10, 6))
     # plt.barh(features, np.abs(coefficients))
     # plt.title("Magnitude des influences (valeur absolue)")
