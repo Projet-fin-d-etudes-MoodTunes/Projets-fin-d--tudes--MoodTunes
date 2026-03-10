@@ -26,6 +26,7 @@ MODEL_DIR = os.path.join(os.path.dirname(__file__), "models")
 os.makedirs(MODEL_DIR, exist_ok=True)
 
 # Chargement des données dans le dataset associé à l'utilisateur
+# On sélectionne le user history pour les intéractions
 
 
 def load_user_dataset(user_id):
